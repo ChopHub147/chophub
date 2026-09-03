@@ -39,6 +39,7 @@ export default function Home() {
     { name: "Fish", price: 2000 },
     { name: "Fried Plantain", price: 500 },
   ];
+  const waterPrice = 500;
 
   const dishes = [
     {
@@ -178,6 +179,7 @@ export default function Home() {
   const [selectedProtein, setSelectedProtein] = useState<
     Record<number, Record<string, number>>
   >({});
+  const [selectedWater, setSelectedWater] = useState<Record<number, boolean>>({});
 
   const scrollToMenu = () => {
     const menuSection = document.getElementById("menu");
@@ -200,6 +202,7 @@ export default function Home() {
     const swallow = selectedSwallow[dish.id];
     const pairing = selectedPairing[dish.id];
     const selectedProteins = selectedProtein[dish.id] || {};
+    const includesWater = selectedWater[dish.id] || false;
     const proteinAddons = proteinOptions.filter(
       (option) => (selectedProteins[option.name] || 0) > 0
     );
@@ -215,7 +218,9 @@ export default function Home() {
                 (option) =>
                   `${option.name} x${selectedProteins[option.name]}`
               )
-              .join(" + ")}`
+              .join(" + ")}${includesWater ? " + Water" : ""}`
+          : includesWater
+          ? `${dish.name} + Water`
           : dish.name;
 
     const itemPrice =
@@ -229,8 +234,9 @@ export default function Home() {
                 (sum, option) =>
                   sum + option.price * selectedProteins[option.name],
                 0
-              )
-            : dish.price;
+            ) +
+            (includesWater ? waterPrice : 0)
+          : dish.price + (includesWater ? waterPrice : 0);
 
     const cartId =
       dish.type === "soup"
@@ -240,8 +246,8 @@ export default function Home() {
           : dish.type === "rice"
             ? `${dish.id}-${proteinAddons
                 .map((option) => `${option.name}-${selectedProteins[option.name]}`)
-                .join("_") || "plain"}`
-          : `${dish.id}`;
+                .join("_") || "plain"}${includesWater ? "-water" : ""}`
+          : `${dish.id}${includesWater ? "-water" : ""}`;
 
     const cartItem: CartItem = {
       id: cartId,
@@ -561,6 +567,27 @@ export default function Home() {
                             {pairing} — ₦1,000
                           </option>
                         ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {dish.name !== "Parfait" && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-green-900 mb-2">
+                        Add water
+                      </label>
+                      <select
+                        value={selectedWater[dish.id] ? "water" : ""}
+                        onChange={(e) =>
+                          setSelectedWater((prev) => ({
+                            ...prev,
+                            [dish.id]: e.target.value === "water",
+                          }))
+                        }
+                        className="w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">No water</option>
+                        <option value="water">Water — ₦{waterPrice.toLocaleString()}</option>
                       </select>
                     </div>
                   )}
