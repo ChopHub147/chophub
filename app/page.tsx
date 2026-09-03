@@ -40,6 +40,21 @@ export default function Home() {
     { name: "Fried Plantain", price: 500 },
   ];
   const waterPrice = 500;
+  const drinkOptions = [
+    { name: "Coke", price: 500 },
+    { name: "Water", price: 500 },
+    { name: "Malt", price: 1000 },
+    { name: "Hollandia", price: 3000 },
+    { name: "Sprite", price: 500 },
+    { name: "Tiger Nuts", price: 1500 },
+    { name: "Pineapple Juice", price: 2000 },
+  ];
+  const beerOptions = [
+    { name: "Heniken", price: 1500 },
+    { name: "Star", price: 1500 },
+    { name: "Stout", price: 1500 },
+    { name: "Desperado", price: 1500 },
+  ];
 
   const dishes = [
     {
@@ -180,6 +195,9 @@ export default function Home() {
     Record<number, Record<string, number>>
   >({});
   const [selectedWater, setSelectedWater] = useState<Record<number, boolean>>({});
+  const [selectedDrink, setSelectedDrink] = useState<
+    Record<number, { name: string; quantity: number }>
+  >({});
 
   const scrollToMenu = () => {
     const menuSection = document.getElementById("menu");
@@ -203,31 +221,40 @@ export default function Home() {
     const pairing = selectedPairing[dish.id];
     const selectedProteins = selectedProtein[dish.id] || {};
     const includesWater = selectedWater[dish.id] || false;
+    const drink = selectedDrink[dish.id];
+    const drinkOption = [...drinkOptions, ...beerOptions].find(
+      (option) => option.name === drink?.name
+    );
+    const drinkLabel = drinkOption
+      ? ` + ${drinkOption.name} x${drink?.quantity}`
+      : "";
+    const drinkCost = drinkOption
+      ? drinkOption.price * (drink?.quantity || 0)
+      : 0;
     const proteinAddons = proteinOptions.filter(
       (option) => (selectedProteins[option.name] || 0) > 0
     );
 
     const itemName =
       dish.type === "soup"
-        ? `${dish.name} + ${swallow}`
+        ? `${dish.name} + ${swallow}${includesWater ? " + Water" : ""}${drinkLabel}`
         : dish.type === "meat"
-          ? `${dish.name} + ${pairing}`
+          ? `${dish.name} + ${pairing}${includesWater ? " + Water" : ""}${drinkLabel}`
           : dish.type === "rice" && proteinAddons.length > 0
           ? `${dish.name} + ${proteinAddons
               .map(
                 (option) =>
                   `${option.name} x${selectedProteins[option.name]}`
               )
-              .join(" + ")}${includesWater ? " + Water" : ""}`
-          : includesWater
-          ? `${dish.name} + Water`
-          : dish.name;
+              .join(" + ")}${includesWater ? " + Water" : ""}${drinkLabel}`
+          : `${dish.name}${includesWater ? " + Water" : ""}${drinkLabel}`;
 
     const itemPrice =
       dish.type === "soup"
         ? dish.price + (swallowOptions.find((option) => option.name === swallow)?.price ?? 0)
+          + (includesWater ? waterPrice : 0) + drinkCost
         : dish.type === "meat"
-          ? dish.price + 1000
+          ? dish.price + 1000 + (includesWater ? waterPrice : 0) + drinkCost
           : dish.type === "rice"
             ? dish.price +
               proteinAddons.reduce(
@@ -235,19 +262,21 @@ export default function Home() {
                   sum + option.price * selectedProteins[option.name],
                 0
             ) +
-            (includesWater ? waterPrice : 0)
-          : dish.price + (includesWater ? waterPrice : 0);
+            (includesWater ? waterPrice : 0) + drinkCost
+          : dish.price +
+            (includesWater ? waterPrice : 0) +
+            drinkCost;
 
     const cartId =
       dish.type === "soup"
         ? `${dish.id}-${swallow}`
         : dish.type === "meat"
-          ? `${dish.id}-${pairing}`
+          ? `${dish.id}-${pairing}${includesWater ? "-water" : ""}${drinkOption ? `-${drinkOption.name}-${drink?.quantity}` : ""}`
           : dish.type === "rice"
             ? `${dish.id}-${proteinAddons
                 .map((option) => `${option.name}-${selectedProteins[option.name]}`)
-                .join("_") || "plain"}${includesWater ? "-water" : ""}`
-          : `${dish.id}${includesWater ? "-water" : ""}`;
+                .join("_") || "plain"}${includesWater ? "-water" : ""}${drinkOption ? `-${drinkOption.name}-${drink?.quantity}` : ""}`
+          : `${dish.id}${includesWater ? "-water" : ""}${drinkOption ? `-${drinkOption.name}-${drink?.quantity}` : ""}`;
 
     const cartItem: CartItem = {
       id: cartId,
@@ -591,6 +620,63 @@ export default function Home() {
                       </select>
                     </div>
                   )}
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-green-900 mb-2">
+                      Drinks
+                    </label>
+                    <div className="flex gap-2">
+                      <select
+                        value={selectedDrink[dish.id]?.name || ""}
+                        onChange={(e) =>
+                          setSelectedDrink((prev) => ({
+                            ...prev,
+                            [dish.id]: {
+                              name: e.target.value,
+                              quantity: e.target.value
+                                ? prev[dish.id]?.quantity || 1
+                                : 0,
+                            },
+                          }))
+                        }
+                        className="min-w-0 flex-1 border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">No drink</option>
+                        {drinkOptions.map((drink) => (
+                          <option key={drink.name} value={drink.name}>
+                            {drink.name} — ₦{drink.price.toLocaleString()}
+                          </option>
+                        ))}
+                        {dish.type === "meat" && (
+                          <optgroup label="Beer (404 & Bush Meat only)">
+                            {beerOptions.map((drink) => (
+                              <option key={drink.name} value={drink.name}>
+                                {drink.name} — ₦{drink.price.toLocaleString()}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                      {selectedDrink[dish.id]?.name && (
+                        <input
+                          type="number"
+                          min="1"
+                          value={selectedDrink[dish.id].quantity}
+                          onChange={(e) =>
+                            setSelectedDrink((prev) => ({
+                              ...prev,
+                              [dish.id]: {
+                                ...prev[dish.id],
+                                quantity: Math.max(1, Number(e.target.value) || 1),
+                              },
+                            }))
+                          }
+                          className="w-20 border border-green-200 rounded-lg px-2 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-green-500"
+                          aria-label="Drink quantity"
+                        />
+                      )}
+                    </div>
+                  </div>
 
                   <button
                     onClick={() => addToCart(dish)}
