@@ -600,11 +600,12 @@ export default function Home() {
                   )}
 
                   {dish.type === "rice" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-green-900 mb-2">
+                    <details className="mb-4">
+                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
                         Choose proteins and sides (optional)
-                      </label>
-                      <div className="space-y-2">
+                        <span className="float-right text-green-600">+</span>
+                      </summary>
+                      <div className="mt-2 space-y-2">
                         {proteinOptions.map((protein) => {
                           const quantity =
                             selectedProtein[dish.id]?.[protein.name] || 0;
@@ -661,7 +662,7 @@ export default function Home() {
                       <p className="text-xs text-gray-500 mt-2">
                         Rice base: ₦{dish.price.toLocaleString()} + selected portions
                       </p>
-                    </div>
+                    </details>
                   )}
 
                   {dish.type === "meat" && (
