@@ -18,6 +18,9 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactDetails, setContactDetails] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
 
   // Temporary "Added!" feedback per dish
   const [addedFeedback, setAddedFeedback] = useState<Record<number, boolean>>({});
@@ -213,6 +216,22 @@ export default function Home() {
     }
   };
 
+  const scrollToContact = () => {
+    const contactSection = document.getElementById("contact");
+    if (contactSection) {
+      contactSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const sendContactMessage = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const subject = encodeURIComponent(`ChopHub contact message from ${contactName}`);
+    const body = encodeURIComponent(
+      `Name: ${contactName}\nPhone or email: ${contactDetails}\n\n${contactMessage}`
+    );
+    window.location.href = `mailto:chophub@aol.com?subject=${subject}&body=${body}`;
+  };
+
   const addToCart = (dish: (typeof dishes)[0]) => {
     if (dish.type === "soup" && !selectedSwallow[dish.id]) {
       alert("Please choose your swallow first.");
@@ -393,9 +412,13 @@ export default function Home() {
             >
               About
             </button>
-            <a href="#" className="hover:text-green-700 transition">
+            <button
+              type="button"
+              onClick={scrollToContact}
+              className="hover:text-green-700 transition"
+            >
               Contact
-            </a>
+            </button>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -875,6 +898,109 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Contact Section */}
+      <section id="contact" className="bg-green-50 py-16 scroll-mt-24">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-10">
+            <p className="text-sm font-semibold uppercase tracking-widest text-green-600 mb-3">
+              Get in touch
+            </p>
+            <h2 className="text-3xl md:text-4xl font-bold text-green-900">
+              Contact ChopHub
+            </h2>
+            <p className="text-gray-600 mt-3">
+              We are available 24/7 to help with your order or question.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-start">
+            <div className="bg-white rounded-2xl border border-green-100 p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-green-900 mb-5">
+                Contact information
+              </h3>
+              <div className="space-y-4 text-gray-700">
+                <p>
+                  <span className="block text-sm font-semibold text-green-800">WhatsApp / Orders</span>
+                  <a href="https://wa.me/2348081688937" target="_blank" rel="noreferrer" className="hover:text-green-700">
+                    +234 808 168 8937
+                  </a>
+                </p>
+                <p>
+                  <span className="block text-sm font-semibold text-green-800">Phone</span>
+                  <a href="tel:+2348137963930" className="hover:text-green-700">
+                    +234 813 796 3930
+                  </a>
+                </p>
+                <p>
+                  <span className="block text-sm font-semibold text-green-800">Email</span>
+                  <a href="mailto:chophub@aol.com" className="hover:text-green-700">
+                    chophub@aol.com
+                  </a>
+                </p>
+                <p>
+                  <span className="block text-sm font-semibold text-green-800">Service area</span>
+                  Calabar Municipal and Calabar South
+                </p>
+                <p>
+                  <span className="block text-sm font-semibold text-green-800">Opening hours</span>
+                  24/7
+                </p>
+                <p>
+                  <span className="block text-sm font-semibold text-green-800">Social media</span>
+                  Instagram · Facebook · TikTok: @chophub
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={sendContactMessage}
+              className="bg-white rounded-2xl border border-green-100 p-6 shadow-sm space-y-4"
+            >
+              <h3 className="text-xl font-bold text-green-900">Send us a message</h3>
+              <div>
+                <label htmlFor="contact-name" className="block text-sm font-medium mb-1">Name</label>
+                <input
+                  id="contact-name"
+                  type="text"
+                  required
+                  value={contactName}
+                  onChange={(event) => setContactName(event.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-details" className="block text-sm font-medium mb-1">Phone or email</label>
+                <input
+                  id="contact-details"
+                  type="text"
+                  required
+                  value={contactDetails}
+                  onChange={(event) => setContactDetails(event.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="contact-message" className="block text-sm font-medium mb-1">Message</label>
+                <textarea
+                  id="contact-message"
+                  required
+                  rows={4}
+                  value={contactMessage}
+                  onChange={(event) => setContactMessage(event.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-full font-semibold transition"
+              >
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-green-900 text-green-100 py-12 mt-16">
