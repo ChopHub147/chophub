@@ -206,6 +206,13 @@ export default function Home() {
     }
   };
 
+  const scrollToAbout = () => {
+    const aboutSection = document.getElementById("about");
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const addToCart = (dish: (typeof dishes)[0]) => {
     if (dish.type === "soup" && !selectedSwallow[dish.id]) {
       alert("Please choose your swallow first.");
@@ -379,9 +386,13 @@ export default function Home() {
             >
               Menu
             </button>
-            <a href="#" className="hover:text-green-700 transition">
+            <button
+              type="button"
+              onClick={scrollToAbout}
+              className="hover:text-green-700 transition"
+            >
               About
-            </a>
+            </button>
             <a href="#" className="hover:text-green-700 transition">
               Contact
             </a>
@@ -693,6 +704,43 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="bg-white py-16 scroll-mt-24">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <p className="text-sm font-semibold uppercase tracking-widest text-green-600 mb-3">
+            Our Story
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-green-900 mb-6">
+            Good food should be easy to find, easy to order, and delivered right.
+          </h2>
+          <div className="space-y-4 text-gray-600 leading-7">
+            <p>
+              ChopHub was born from a simple idea:{" "}
+              <strong className="text-green-800">
+                good food should be easy to find, easy to order, and delivered
+                right.
+              </strong>
+            </p>
+            <p>
+              We created ChopHub to connect people with the food they love from
+              restaurants and food vendors across Calabar, while making the
+              entire experience more convenient, reliable, and enjoyable.
+            </p>
+            <p>
+              From the moment you place your order to the moment it arrives at
+              your door, we focus on the details that matter:{" "}
+              <strong className="text-green-800">
+                quality, convenience, presentation, and great service.
+              </strong>
+            </p>
+            <p className="font-semibold text-green-800">
+              ChopHub is more than food delivery. It&apos;s your hub for good
+              food.
+            </p>
           </div>
         </div>
       </section>
