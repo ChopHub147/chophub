@@ -602,7 +602,7 @@ export default function Home() {
                   {dish.type === "rice" && (
                     <details className="mb-4">
                       <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                        Choose proteins and sides (optional)
+                        Customize rice (optional)
                         <span className="float-right text-green-600">+</span>
                       </summary>
                       <div className="mt-2 space-y-2">
