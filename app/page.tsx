@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type CartItem = {
   id: string;
@@ -404,12 +405,9 @@ export default function Home() {
           </div>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
-            <button
-              onClick={scrollToMenu}
-              className="hover:text-green-700 transition"
-            >
+            <a href="/menu" className="hover:text-green-700 transition">
               Menu
-            </button>
+            </a>
             <button
               type="button"
               onClick={scrollToAbout}
@@ -484,13 +482,13 @@ export default function Home() {
             </button>
             {isMobileNavOpen && (
               <nav className="absolute right-0 top-12 z-10 w-36 rounded-xl border border-green-100 bg-white p-2 shadow-lg">
-                <button
-                  type="button"
-                  onClick={scrollToMenu}
+                <a
+                  href="/menu"
+                  onClick={() => setIsMobileNavOpen(false)}
                   className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-green-50 transition"
                 >
                   Menu
-                </button>
+                </a>
                 <button
                   type="button"
                   onClick={scrollToAbout}
@@ -530,12 +528,12 @@ export default function Home() {
             >
               Order Food Now
             </button>
-            <button
-              onClick={scrollToMenu}
+            <Link
+              href="/menu"
               className="bg-white border-2 border-green-200 hover:border-green-400 text-green-800 px-8 py-4 rounded-full text-lg font-semibold transition"
             >
               View Full Menu
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -547,7 +545,7 @@ export default function Home() {
             Featured Dishes
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
-            {dishes.map((dish) => (
+            {dishes.slice(0, 6).map((dish) => (
               <div key={dish.id} className={dish.sectionTitle ? "contents" : ""}>
                 {dish.sectionTitle && (
                 <h3 className="col-span-2 md:col-span-3 text-2xl font-bold text-green-900 pt-4">
@@ -654,6 +652,14 @@ export default function Home() {
                                 >
                                   +
                                 </button>
+                              </div>
+                              <div className="text-center mt-10">
+                                <a
+                                  href="/menu"
+                                  className="inline-block bg-white border-2 border-green-200 hover:border-green-400 text-green-800 px-6 py-3 rounded-full font-semibold transition"
+                                >
+                                  View Full Menu
+                                </a>
                               </div>
                             </div>
                           );
