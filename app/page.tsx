@@ -11,8 +11,49 @@ type CartItem = {
   image: string;
 };
 
+const cartStorageKey = "chophub-cart";
+
+const getStoredCart = (): CartItem[] => {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  const storedCart = window.localStorage.getItem(cartStorageKey);
+
+  if (!storedCart) {
+    return [];
+  }
+
+  try {
+    const parsedCart: unknown = JSON.parse(storedCart);
+
+    if (!Array.isArray(parsedCart)) {
+      return [];
+    }
+
+    return parsedCart.filter((item): item is CartItem => {
+      if (typeof item !== "object" || item === null) {
+        return false;
+      }
+
+      const candidate = item as Record<string, unknown>;
+
+      return (
+        typeof candidate.id === "string" &&
+        typeof candidate.name === "string" &&
+        typeof candidate.price === "number" &&
+        typeof candidate.quantity === "number" &&
+        typeof candidate.image === "string"
+      );
+    });
+  } catch {
+    return [];
+  }
+};
+
 export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -213,6 +254,23 @@ export default function Home() {
     (typeof dishes)[number] | null
   >(null);
   const [customizationQuantity, setCustomizationQuantity] = useState(1);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setCart(getStoredCart());
+      setIsCartLoaded(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (!isCartLoaded) {
+      return;
+    }
+
+    window.localStorage.setItem(cartStorageKey, JSON.stringify(cart));
+  }, [cart, isCartLoaded]);
 
   const scrollToMenu = () => {
     setIsMobileNavOpen(false);
