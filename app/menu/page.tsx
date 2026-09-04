@@ -58,7 +58,7 @@ export default async function MenuPage({
             {category ? `Explore our ${title.toLowerCase()} selection.` : "Explore everything available to order."}
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+        <div className="grid grid-cols-2 gap-3 md:gap-6">
           {filteredDishes.map(([name, price, description, image]) => (
             <article key={name} className="bg-white rounded-2xl overflow-hidden border border-green-100 shadow-sm">
               <div className="h-32 md:h-44 overflow-hidden">
