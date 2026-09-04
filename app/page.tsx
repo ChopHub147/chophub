@@ -42,6 +42,7 @@ export default function Home() {
     { name: "Beef", price: 2500 },
     { name: "Fish", price: 2000 },
     { name: "Fried Plantain", price: 500 },
+    { name: "Salad", price: 700 },
   ];
   const waterPrice = 500;
   const drinkOptions = [
@@ -601,7 +602,7 @@ export default function Home() {
                   {dish.type === "rice" && (
                     <div className="mb-4">
                       <label className="block text-sm font-semibold text-green-900 mb-2">
-                        Choose proteins and portions (optional)
+                        Choose proteins and sides (optional)
                       </label>
                       <div className="space-y-2">
                         {proteinOptions.map((protein) => {
@@ -689,10 +690,11 @@ export default function Home() {
                   )}
 
                   {dish.name !== "Parfait" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-green-900 mb-2">
+                    <details className="mb-4">
+                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
                         Add water
-                      </label>
+                        <span className="float-right text-green-600">+</span>
+                      </summary>
                       <select
                         value={selectedWater[dish.id] ? "water" : ""}
                         onChange={(e) =>
@@ -701,12 +703,12 @@ export default function Home() {
                             [dish.id]: e.target.value === "water",
                           }))
                         }
-                        className="w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="mt-2 w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <option value="">No water</option>
                         <option value="water">Water — ₦{waterPrice.toLocaleString()}</option>
                       </select>
-                    </div>
+                    </details>
                   )}
 
                   <details className="mb-4">
