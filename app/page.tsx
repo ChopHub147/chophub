@@ -550,15 +550,27 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
             {featuredDishes.map((dish) => (
               <div key={dish.id} className="contents">
-                <h3 className="col-span-2 md:col-span-3 text-2xl font-bold text-green-900 pt-4">
-                    {dish.type === "soup"
-                      ? "Soup and Swallow"
+                <Link
+                  href={`/menu?category=${
+                    dish.type === "soup"
+                      ? "soup-swallow"
                       : dish.type === "meat"
-                        ? "Meat"
+                        ? "meat"
                         : dish.type === "rice"
-                          ? "Rice"
-                          : "Dessert"}
-                  </h3>
+                          ? "rice"
+                          : "dessert"
+                  }`}
+                  className="col-span-2 md:col-span-3 text-2xl font-bold text-green-900 pt-4 hover:text-green-700 transition"
+                >
+                  {dish.type === "soup"
+                    ? "Soup and Swallow"
+                    : dish.type === "meat"
+                      ? "Meat"
+                      : dish.type === "rice"
+                        ? "Rice"
+                        : "Dessert"}
+                  <span className="ml-2 text-sm font-medium text-green-600">View all →</span>
+                </Link>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-green-100">
                 <div className="h-32 md:h-52 overflow-hidden">
                     <img
