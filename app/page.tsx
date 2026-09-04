@@ -545,32 +545,32 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center mb-12 text-green-900">
             Featured Dishes
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
             {dishes.map((dish) => (
               <div key={dish.id} className={dish.sectionTitle ? "contents" : ""}>
                 {dish.sectionTitle && (
-                  <h3 className="md:col-span-3 text-2xl font-bold text-green-900 pt-4">
+                <h3 className="col-span-2 md:col-span-3 text-2xl font-bold text-green-900 pt-4">
                     {dish.sectionTitle}
                   </h3>
                 )}
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-green-100">
-                  <div className="h-52 overflow-hidden">
+                <div className="h-32 md:h-52 overflow-hidden">
                     <img
                       src={dish.image}
                       alt={dish.name}
                       className="w-full h-full object-cover hover:scale-105 transition duration-500"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className="p-3 md:p-6">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-lg text-green-900">
+                      <h3 className="font-bold text-sm md:text-lg text-green-900">
                         {dish.name}
                       </h3>
-                      <span className="text-green-700 font-bold">
+                      <span className="text-green-700 font-bold text-xs md:text-base">
                         {dish.type === "rice" ? "From " : ""}₦{dish.price.toLocaleString()}
                       </span>
                     </div>
-                  <p className="text-gray-600 text-sm mb-4">{dish.desc}</p>
+                  <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4">{dish.desc}</p>
 
                   {dish.type === "soup" && (
                     <div className="mb-4">
