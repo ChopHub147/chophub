@@ -20,6 +20,7 @@ export default function Home() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryArea, setDeliveryArea] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactDetails, setContactDetails] = useState("");
   const [contactMessage, setContactMessage] = useState("");
@@ -386,13 +387,15 @@ export default function Home() {
     (sum, item) => sum + item.price * item.quantity,
     0
   );
+  const isNightDelivery = new Date().getHours() >= 18;
+  const qualifiesForFreeDayDelivery = !isNightDelivery && totalPrice >= 50000;
 
   // WhatsApp Checkout with customer details
   const sendOrderToWhatsApp = () => {
     if (cart.length === 0) return;
 
-    if (!customerName || !customerPhone || !deliveryAddress) {
-      alert("Please fill in your Name, Phone Number and Delivery Address");
+    if (!customerName || !customerPhone || !deliveryAddress || !deliveryArea) {
+      alert("Please fill in your name, phone number, delivery area and address");
       return;
     }
 
@@ -400,6 +403,7 @@ export default function Home() {
     message += `*Customer Details*%0A`;
     message += `Name: ${customerName}%0A`;
     message += `Phone: ${customerPhone}%0A`;
+    message += `Delivery area: ${deliveryArea}%0A`;
     message += `Address: ${deliveryAddress}%0A%0A`;
     message += `*Order Items*%0A`;
 
@@ -409,7 +413,14 @@ export default function Home() {
       ).toLocaleString()}%0A`;
     });
 
-    message += `%0A*Total: ₦${totalPrice.toLocaleString()}*%0A%0A`;
+    message += `%0A*Food subtotal: ₦${totalPrice.toLocaleString()}*%0A`;
+    message += `Delivery: ${
+      qualifiesForFreeDayDelivery
+        ? "FREE daytime delivery"
+        : isNightDelivery
+          ? "Night delivery fee to be confirmed based on location"
+          : "Daytime delivery fee to be confirmed based on location"
+    }%0A%0A`;
     message += `Please confirm my order. Thank you!`;
 
     const phoneNumber = "2348081688937";
@@ -1030,6 +1041,36 @@ export default function Home() {
                         placeholder="Enter your full name"
                         className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Delivery Area
+                      </label>
+                      <select
+                        value={deliveryArea}
+                        onChange={(e) => setDeliveryArea(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                      >
+                        <option value="">Select your delivery area</option>
+                        <option value="Calabar Municipal">Calabar Municipal</option>
+                        <option value="Calabar South">Calabar South</option>
+                        <option value="Outside listed areas">Outside listed areas</option>
+                      </select>
+                    </div>
+
+                    <div className="rounded-lg bg-green-50 p-3 text-sm text-green-900">
+                      <p className="font-semibold">
+                        {qualifiesForFreeDayDelivery
+                          ? "You qualify for free daytime delivery!"
+                          : isNightDelivery
+                            ? "Night delivery applies after 6:00pm."
+                            : "Daytime delivery fee depends on your location."}
+                      </p>
+                      <p className="mt-1 text-green-800">
+                        Delivery fees are confirmed based on your area and order time.
+                        Orders of ₦50,000 or more qualify for free daytime delivery.
+                      </p>
                     </div>
 
                     <div>
