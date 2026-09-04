@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type CartItem = {
   id: string;
@@ -52,6 +53,7 @@ const getStoredCart = (): CartItem[] => {
 };
 
 export default function Home() {
+  const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartLoaded, setIsCartLoaded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -428,6 +430,13 @@ export default function Home() {
       setAddedFeedback((prev) => ({ ...prev, [dish.id]: false }));
     }, 1800);
     closeCustomization();
+
+    const returnCategory = new URLSearchParams(window.location.search).get(
+      "returnCategory"
+    );
+    if (returnCategory) {
+      router.push(`/menu?category=${encodeURIComponent(returnCategory)}`);
+    }
   };
 
   const updateQuantity = (id: string, change: number) => {

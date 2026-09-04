@@ -92,7 +92,7 @@ export default async function MenuPage({
                 </div>
                 <p className="text-xs md:text-sm text-gray-600 mt-2">{description}</p>
                 <Link
-                  href={`/?dish=${dishIds[name]}#menu`}
+                  href={`/?dish=${dishIds[name]}&returnCategory=${category ?? ""}#menu`}
                   className="mt-4 block rounded-full bg-green-600 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-green-700"
                 >
                   Customize &amp; Add
