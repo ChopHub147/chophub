@@ -919,6 +919,19 @@ export default function Home() {
               <h3 className="text-xl font-bold text-green-900 mb-5">
                 Contact information
               </h3>
+              <div className="flex flex-col sm:flex-row items-center gap-4 border-b border-green-100 pb-5 mb-5">
+                <img
+                  src="/whatsapp-qr.svg"
+                  alt="Scan to chat with ChopHub on WhatsApp"
+                  className="w-32 h-32 rounded-lg"
+                />
+                <div className="text-center sm:text-left">
+                  <p className="font-semibold text-green-900">Scan to order on WhatsApp</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Point your phone camera at the QR code to start a chat.
+                  </p>
+                </div>
+              </div>
               <div className="space-y-4 text-gray-700">
                 <p>
                   <span className="block text-sm font-semibold text-green-800">WhatsApp / Orders</span>
