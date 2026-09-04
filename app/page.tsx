@@ -194,6 +194,9 @@ export default function Home() {
       sectionTitle: "Abáchà",
     },
   ];
+  const featuredDishes = dishes.filter((dish) =>
+    [1, 3, 12, 15].includes(dish.id)
+  );
 
   const [selectedSwallow, setSelectedSwallow] = useState<Record<number, string>>({});
   const [selectedPairing, setSelectedPairing] = useState<Record<number, string>>({});
@@ -545,13 +548,17 @@ export default function Home() {
             Featured Dishes
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
-            {dishes.slice(0, 6).map((dish) => (
-              <div key={dish.id} className={dish.sectionTitle ? "contents" : ""}>
-                {dish.sectionTitle && (
+            {featuredDishes.map((dish) => (
+              <div key={dish.id} className="contents">
                 <h3 className="col-span-2 md:col-span-3 text-2xl font-bold text-green-900 pt-4">
-                    {dish.sectionTitle}
+                    {dish.type === "soup"
+                      ? "Soup and Swallow"
+                      : dish.type === "meat"
+                        ? "Meat"
+                        : dish.type === "rice"
+                          ? "Rice"
+                          : "Dessert"}
                   </h3>
-                )}
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-green-100">
                 <div className="h-32 md:h-52 overflow-hidden">
                     <img
