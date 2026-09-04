@@ -14,6 +14,7 @@ type CartItem = {
 export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Customer details
@@ -361,6 +362,7 @@ export default function Home() {
 
       return [...prev, cartItem];
     });
+    setOrderSubmitted(false);
 
     // Show "Added!" feedback
     setAddedFeedback((prev) => ({ ...prev, [dish.id]: true }));
@@ -427,6 +429,7 @@ export default function Home() {
     const whatsappURL = `https://wa.me/${phoneNumber}?text=${message}`;
 
     window.open(whatsappURL, "_blank");
+    setOrderSubmitted(true);
   };
 
   return (
@@ -982,6 +985,15 @@ export default function Home() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-5">
+              {orderSubmitted && (
+                <div className="mb-5 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-900">
+                  <p className="font-semibold">Order details sent to WhatsApp.</p>
+                  <p className="mt-1">
+                    ChopHub will confirm your delivery fee and estimated arrival time
+                    based on your area and order time.
+                  </p>
+                </div>
+              )}
               {cart.length === 0 ? (
                 <p className="text-gray-500 text-center mt-10">
                   Your cart is empty
@@ -1105,11 +1117,23 @@ export default function Home() {
 
             {cart.length > 0 && (
               <div className="border-t p-5">
-                <div className="flex justify-between text-lg font-bold mb-4">
-                  <span>Total</span>
-                  <span className="text-green-700">
-                    ₦{totalPrice.toLocaleString()}
-                  </span>
+                <div className="space-y-2 mb-4 text-sm">
+                  <div className="flex justify-between">
+                    <span>Food subtotal</span>
+                    <span className="font-semibold">₦{totalPrice.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Delivery fee</span>
+                    <span>
+                      {qualifiesForFreeDayDelivery
+                        ? "Free daytime delivery"
+                        : "Confirmed by area and time"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2 text-lg font-bold">
+                    <span>Order total</span>
+                    <span className="text-green-700">Food subtotal + delivery</span>
+                  </div>
                 </div>
                 <button
                   onClick={sendOrderToWhatsApp}
