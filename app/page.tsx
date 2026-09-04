@@ -570,7 +570,7 @@ export default function Home() {
 
       {/* Featured Dishes */}
       <section id="menu" className="py-16 scroll-mt-24">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12 text-green-900">
             Featured Dishes
           </h2>
@@ -599,7 +599,7 @@ export default function Home() {
                   <span className="ml-2 text-sm font-medium text-green-600">View all →</span>
                 </Link>
                 <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-green-100">
-                <div className="h-32 md:h-52 overflow-hidden">
+                <div className="h-40 md:h-64 overflow-hidden">
                     <img
                       src={dish.image}
                       alt={dish.name}
