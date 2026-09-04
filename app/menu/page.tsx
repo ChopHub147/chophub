@@ -19,6 +19,25 @@ const dishes = [
   ["Abáchà", 4000, "Traditional African salad prepared with delicious local ingredients.", "/abacha.JPG", "dessert"],
 ] as const;
 
+const dishIds: Record<string, number> = {
+  "Afang Soup": 1,
+  "Edikang Ikong": 2,
+  "Indigenous 404": 3,
+  "Indigenous Bush Meat": 4,
+  "Fisherman Soup": 5,
+  "White Soup": 6,
+  "Ogbono Soup": 7,
+  "Okro Soup": 8,
+  "Egusi Soup": 9,
+  "Oha Soup": 10,
+  "Fresh Roasted Fish": 11,
+  "Jollof Rice": 12,
+  "Rice & Stew": 13,
+  Shawarma: 14,
+  Parfait: 15,
+  "Abáchà": 16,
+};
+
 const categoryNames = {
   "soup-swallow": "Soup and Swallow",
   meat: "Meat",
@@ -72,6 +91,12 @@ export default async function MenuPage({
                   </span>
                 </div>
                 <p className="text-xs md:text-sm text-gray-600 mt-2">{description}</p>
+                <Link
+                  href={`/?dish=${dishIds[name]}#menu`}
+                  className="mt-4 block rounded-full bg-green-600 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-green-700"
+                >
+                  Customize &amp; Add
+                </Link>
               </div>
             </article>
           ))}

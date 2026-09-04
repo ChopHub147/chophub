@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type CartItem = {
@@ -249,6 +249,18 @@ export default function Home() {
     setCustomizingDish(dish);
     setCustomizationQuantity(1);
   };
+
+  useEffect(() => {
+    const dishId = Number(new URLSearchParams(window.location.search).get("dish"));
+    const dish = dishes.find((item) => item.id === dishId);
+
+    if (dish) {
+      const timeoutId = window.setTimeout(() => openCustomization(dish), 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+    // The URL is only read when the page is opened from a menu card.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const closeCustomization = () => {
     setCustomizingDish(null);
