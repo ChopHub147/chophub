@@ -207,6 +207,10 @@ export default function Home() {
   const [selectedDrink, setSelectedDrink] = useState<
     Record<number, { name: string; quantity: number }>
   >({});
+  const [customizingDish, setCustomizingDish] = useState<
+    (typeof dishes)[number] | null
+  >(null);
+  const [customizationQuantity, setCustomizationQuantity] = useState(1);
 
   const scrollToMenu = () => {
     setIsMobileNavOpen(false);
@@ -241,7 +245,17 @@ export default function Home() {
     window.location.href = `mailto:chophub@aol.com?subject=${subject}&body=${body}`;
   };
 
-  const addToCart = (dish: (typeof dishes)[0]) => {
+  const openCustomization = (dish: (typeof dishes)[0]) => {
+    setCustomizingDish(dish);
+    setCustomizationQuantity(1);
+  };
+
+  const closeCustomization = () => {
+    setCustomizingDish(null);
+    setCustomizationQuantity(1);
+  };
+
+  const addToCart = (dish: (typeof dishes)[0], quantity = 1) => {
     if (dish.type === "soup" && !selectedSwallow[dish.id]) {
       alert("Please choose your swallow first.");
       return;
@@ -304,7 +318,7 @@ export default function Home() {
 
     const cartId =
       dish.type === "soup"
-        ? `${dish.id}-${swallow}`
+        ? `${dish.id}-${swallow}${includesWater ? "-water" : ""}${drinkOption ? `-${drinkOption.name}-${drink?.quantity}` : ""}`
         : dish.type === "meat"
           ? `${dish.id}-${pairing}${includesWater ? "-water" : ""}${drinkOption ? `-${drinkOption.name}-${drink?.quantity}` : ""}`
           : dish.type === "rice"
@@ -317,7 +331,7 @@ export default function Home() {
       id: cartId,
       name: itemName,
       price: itemPrice,
-      quantity: 1,
+      quantity,
       image: dish.image,
     };
 
@@ -327,7 +341,7 @@ export default function Home() {
       if (existing) {
         return prev.map((item) =>
           item.id === cartId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
@@ -340,6 +354,7 @@ export default function Home() {
     setTimeout(() => {
       setAddedFeedback((prev) => ({ ...prev, [dish.id]: false }));
     }, 1800);
+    closeCustomization();
   };
 
   const updateQuantity = (id: string, change: number) => {
@@ -590,214 +605,8 @@ export default function Home() {
                     </div>
                   <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4">{dish.desc}</p>
 
-                  {dish.type === "soup" && (
-                    <details className="mb-4">
-                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                        Choose your swallow
-                      <span className="float-right text-green-600">+</span>
-                      </summary>
-                      <select
-                        value={selectedSwallow[dish.id] || ""}
-                        onChange={(e) =>
-                          setSelectedSwallow((prev) => ({
-                            ...prev,
-                            [dish.id]: e.target.value,
-                          }))
-                        }
-                        className="mt-2 w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">Select swallow</option>
-                        {swallowOptions.map((swallow) => (
-                          <option key={swallow.name} value={swallow.name}>
-                            {swallow.name} — ₦{swallow.price.toLocaleString()}
-                          </option>
-                        ))}
-                      </select>
-                    </details>
-                  )}
-
-                  {dish.type === "rice" && (
-                    <details className="mb-4">
-                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                        Customize rice (optional)
-                        <span className="float-right text-green-600">+</span>
-                      </summary>
-                      <div className="mt-2 space-y-2">
-                        {proteinOptions.map((protein) => {
-                          const quantity =
-                            selectedProtein[dish.id]?.[protein.name] || 0;
-
-                          return (
-                            <div
-                              key={protein.name}
-                              className="flex items-center justify-between border border-green-100 rounded-lg px-3 py-2"
-                            >
-                              <span className="text-sm">
-                                {protein.name} — ₦{protein.price.toLocaleString()}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setSelectedProtein((prev) => ({
-                                      ...prev,
-                                      [dish.id]: {
-                                        ...prev[dish.id],
-                                        [protein.name]: Math.max(0, quantity - 1),
-                                      },
-                                    }))
-                                  }
-                                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200"
-                                  aria-label={`Remove one portion of ${protein.name}`}
-                                >
-                                  −
-                                </button>
-                                <span className="w-5 text-center font-medium">
-                                  {quantity}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setSelectedProtein((prev) => ({
-                                      ...prev,
-                                      [dish.id]: {
-                                        ...prev[dish.id],
-                                        [protein.name]: quantity + 1,
-                                      },
-                                    }))
-                                  }
-                                  className="w-7 h-7 rounded-full bg-green-100 hover:bg-green-200 text-green-900"
-                                  aria-label={`Add one portion of ${protein.name}`}
-                                >
-                                  +
-                                </button>
-                              </div>
-                              <div className="text-center mt-10">
-                                <a
-                                  href="/menu"
-                                  className="inline-block bg-white border-2 border-green-200 hover:border-green-400 text-green-800 px-6 py-3 rounded-full font-semibold transition"
-                                >
-                                  View Full Menu
-                                </a>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Rice base: ₦{dish.price.toLocaleString()} + selected portions
-                      </p>
-                    </details>
-                  )}
-
-                  {dish.type === "meat" && (
-                    <details className="mb-4">
-                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                        Choose your side
-                        <span className="float-right text-green-600">+</span>
-                      </summary>
-                      <select
-                        value={selectedPairing[dish.id] || ""}
-                        onChange={(e) =>
-                          setSelectedPairing((prev) => ({
-                            ...prev,
-                            [dish.id]: e.target.value,
-                          }))
-                        }
-                        className="mt-2 w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">Select side — ₦1,000</option>
-                        {pairingOptions.map((pairing) => (
-                          <option key={pairing} value={pairing}>
-                            {pairing} — ₦1,000
-                          </option>
-                        ))}
-                      </select>
-                    </details>
-                  )}
-
-                  {dish.name !== "Parfait" && (
-                    <details className="mb-4">
-                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                        Add water
-                        <span className="float-right text-green-600">+</span>
-                      </summary>
-                      <select
-                        value={selectedWater[dish.id] ? "water" : ""}
-                        onChange={(e) =>
-                          setSelectedWater((prev) => ({
-                            ...prev,
-                            [dish.id]: e.target.value === "water",
-                          }))
-                        }
-                        className="mt-2 w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">No water</option>
-                        <option value="water">Water — ₦{waterPrice.toLocaleString()}</option>
-                      </select>
-                    </details>
-                  )}
-
-                  <details className="mb-4">
-                    <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                      Chilled Drinks
-                      <span className="float-right text-green-600">+</span>
-                    </summary>
-                    <div className="mt-2 flex gap-2">
-                      <select
-                        value={selectedDrink[dish.id]?.name || ""}
-                        onChange={(e) =>
-                          setSelectedDrink((prev) => ({
-                            ...prev,
-                            [dish.id]: {
-                              name: e.target.value,
-                              quantity: e.target.value
-                                ? prev[dish.id]?.quantity || 1
-                                : 0,
-                            },
-                          }))
-                        }
-                        className="min-w-0 flex-1 border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                      >
-                        <option value="">No drink</option>
-                        {drinkOptions.map((drink) => (
-                          <option key={drink.name} value={drink.name}>
-                            {drink.name} — ₦{drink.price.toLocaleString()}
-                          </option>
-                        ))}
-                        {dish.type === "meat" && (
-                          <optgroup label="Beer (404 & Bush Meat only)">
-                            {beerOptions.map((drink) => (
-                              <option key={drink.name} value={drink.name}>
-                                {drink.name} — ₦{drink.price.toLocaleString()}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </select>
-                      {selectedDrink[dish.id]?.name && (
-                        <input
-                          type="number"
-                          min="1"
-                          value={selectedDrink[dish.id].quantity}
-                          onChange={(e) =>
-                            setSelectedDrink((prev) => ({
-                              ...prev,
-                              [dish.id]: {
-                                ...prev[dish.id],
-                                quantity: Math.max(1, Number(e.target.value) || 1),
-                              },
-                            }))
-                          }
-                          className="w-20 border border-green-200 rounded-lg px-2 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-green-500"
-                          aria-label="Drink quantity"
-                        />
-                      )}
-                    </div>
-                  </details>
-
                   <button
-                    onClick={() => addToCart(dish)}
+                    onClick={() => openCustomization(dish)}
                     disabled={addedFeedback[dish.id]}
                     className={`w-full py-2.5 rounded-full font-medium transition ${
                       addedFeedback[dish.id]
@@ -805,7 +614,7 @@ export default function Home() {
                         : "bg-green-600 hover:bg-green-700 text-white"
                     }`}
                   >
-                    {addedFeedback[dish.id] ? "Added! ✓" : "Add to Cart"}
+                    {addedFeedback[dish.id] ? "Added! ✓" : "Customize & Add"}
                   </button>
                   </div>
                 </div>
@@ -851,6 +660,280 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Meal customization modal */}
+      {customizingDish && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="presentation"
+          onClick={closeCustomization}
+        >
+          <div
+            className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="customization-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-green-100 p-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-green-600">
+                  Customize your meal
+                </p>
+                <h2 id="customization-title" className="mt-1 text-xl font-bold text-green-900">
+                  {customizingDish.name}
+                </h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Base price: ₦{customizingDish.price.toLocaleString()}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeCustomization}
+                className="rounded-full p-1 text-2xl leading-none text-gray-500 hover:bg-green-50 hover:text-gray-800"
+                aria-label="Close meal customization"
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              className="overflow-y-auto p-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                addToCart(customizingDish, customizationQuantity);
+              }}
+            >
+              {customizingDish.type === "soup" && (
+                <label className="mb-5 block">
+                  <span className="mb-2 block text-sm font-semibold text-green-900">
+                    Choose your swallow
+                  </span>
+                  <select
+                    required
+                    value={selectedSwallow[customizingDish.id] || ""}
+                    onChange={(event) =>
+                      setSelectedSwallow((prev) => ({
+                        ...prev,
+                        [customizingDish.id]: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-green-200 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">Select swallow</option>
+                    {swallowOptions.map((swallow) => (
+                      <option key={swallow.name} value={swallow.name}>
+                        {swallow.name} — ₦{swallow.price.toLocaleString()}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              {customizingDish.type === "rice" && (
+                <fieldset className="mb-5">
+                  <legend className="mb-2 text-sm font-semibold text-green-900">
+                    Proteins &amp; sides <span className="font-normal text-gray-500">(optional)</span>
+                  </legend>
+                  <div className="space-y-2">
+                    {proteinOptions.map((protein) => {
+                      const quantity =
+                        selectedProtein[customizingDish.id]?.[protein.name] || 0;
+
+                      return (
+                        <div
+                          key={protein.name}
+                          className="flex items-center justify-between rounded-lg border border-green-100 px-3 py-2.5"
+                        >
+                          <span className="text-sm">
+                            {protein.name} — ₦{protein.price.toLocaleString()}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedProtein((prev) => ({
+                                  ...prev,
+                                  [customizingDish.id]: {
+                                    ...prev[customizingDish.id],
+                                    [protein.name]: Math.max(0, quantity - 1),
+                                  },
+                                }))
+                              }
+                              className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200"
+                              aria-label={`Remove one portion of ${protein.name}`}
+                            >
+                              −
+                            </button>
+                            <span className="w-5 text-center font-medium">{quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSelectedProtein((prev) => ({
+                                  ...prev,
+                                  [customizingDish.id]: {
+                                    ...prev[customizingDish.id],
+                                    [protein.name]: quantity + 1,
+                                  },
+                                }))
+                              }
+                              className="h-8 w-8 rounded-full bg-green-100 text-green-900 hover:bg-green-200"
+                              aria-label={`Add one portion of ${protein.name}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              )}
+
+              {customizingDish.type === "meat" && (
+                <label className="mb-5 block">
+                  <span className="mb-2 block text-sm font-semibold text-green-900">
+                    Choose your side
+                  </span>
+                  <select
+                    required
+                    value={selectedPairing[customizingDish.id] || ""}
+                    onChange={(event) =>
+                      setSelectedPairing((prev) => ({
+                        ...prev,
+                        [customizingDish.id]: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-green-200 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">Select side — ₦1,000</option>
+                    {pairingOptions.map((pairing) => (
+                      <option key={pairing} value={pairing}>
+                        {pairing} — ₦1,000
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              {customizingDish.name !== "Parfait" && (
+                <label className="mb-5 block">
+                  <span className="mb-2 block text-sm font-semibold text-green-900">
+                    Water
+                  </span>
+                  <select
+                    value={selectedWater[customizingDish.id] ? "water" : ""}
+                    onChange={(event) =>
+                      setSelectedWater((prev) => ({
+                        ...prev,
+                        [customizingDish.id]: event.target.value === "water",
+                      }))
+                    }
+                    className="w-full rounded-lg border border-green-200 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">No water</option>
+                    <option value="water">Water — ₦{waterPrice.toLocaleString()}</option>
+                  </select>
+                </label>
+              )}
+
+              <div className="mb-5">
+                <span className="mb-2 block text-sm font-semibold text-green-900">
+                  Chilled drinks
+                </span>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedDrink[customizingDish.id]?.name || ""}
+                    onChange={(event) =>
+                      setSelectedDrink((prev) => ({
+                        ...prev,
+                        [customizingDish.id]: {
+                          name: event.target.value,
+                          quantity: event.target.value
+                            ? prev[customizingDish.id]?.quantity || 1
+                            : 0,
+                        },
+                      }))
+                    }
+                    className="min-w-0 flex-1 rounded-lg border border-green-200 bg-white px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  >
+                    <option value="">No drink</option>
+                    {drinkOptions.map((drink) => (
+                      <option key={drink.name} value={drink.name}>
+                        {drink.name} — ₦{drink.price.toLocaleString()}
+                      </option>
+                    ))}
+                    {customizingDish.type === "meat" && (
+                      <optgroup label="Beer">
+                        {beerOptions.map((drink) => (
+                          <option key={drink.name} value={drink.name}>
+                            {drink.name} — ₦{drink.price.toLocaleString()}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  {selectedDrink[customizingDish.id]?.name && (
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={selectedDrink[customizingDish.id].quantity}
+                      onChange={(event) =>
+                        setSelectedDrink((prev) => ({
+                          ...prev,
+                          [customizingDish.id]: {
+                            ...prev[customizingDish.id],
+                            quantity: Math.min(20, Math.max(1, Number(event.target.value) || 1)),
+                          },
+                        }))
+                      }
+                      className="w-20 rounded-lg border border-green-200 px-2 py-2.5 text-center focus:outline-none focus:ring-2 focus:ring-green-500"
+                      aria-label="Chilled drink quantity"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-5">
+                <span className="mb-2 block text-sm font-semibold text-green-900">
+                  Meal quantity
+                </span>
+                <div className="flex w-fit items-center gap-4 rounded-lg border border-green-200 px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCustomizationQuantity((quantity) => Math.max(1, quantity - 1))
+                    }
+                    className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200"
+                    aria-label="Remove one meal"
+                  >
+                    −
+                  </button>
+                  <span className="w-6 text-center font-semibold">{customizationQuantity}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCustomizationQuantity((quantity) => Math.min(20, quantity + 1))
+                    }
+                    className="h-8 w-8 rounded-full bg-green-100 text-green-900 hover:bg-green-200"
+                    aria-label="Add one meal"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full rounded-full bg-green-600 py-3 font-semibold text-white transition hover:bg-green-700"
+              >
+                Add {customizationQuantity} {customizationQuantity === 1 ? "meal" : "meals"} to Cart
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Cart Sidebar */}
       {isCartOpen && (
