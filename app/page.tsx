@@ -13,6 +13,7 @@ type CartItem = {
 export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   // Customer details
   const [customerName, setCustomerName] = useState("");
@@ -203,6 +204,7 @@ export default function Home() {
   >({});
 
   const scrollToMenu = () => {
+    setIsMobileNavOpen(false);
     const menuSection = document.getElementById("menu");
     if (menuSection) {
       menuSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -210,6 +212,7 @@ export default function Home() {
   };
 
   const scrollToAbout = () => {
+    setIsMobileNavOpen(false);
     const aboutSection = document.getElementById("about");
     if (aboutSection) {
       aboutSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -217,6 +220,7 @@ export default function Home() {
   };
 
   const scrollToContact = () => {
+    setIsMobileNavOpen(false);
     const contactSection = document.getElementById("contact");
     if (contactSection) {
       contactSection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -454,29 +458,55 @@ export default function Home() {
               Order Now
             </button>
           </div>
-          <nav className="flex md:hidden items-center justify-center gap-6 pt-3 text-sm font-medium">
+          <div className="relative md:hidden">
             <button
               type="button"
-              onClick={scrollToMenu}
-              className="hover:text-green-700 transition"
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMobileNavOpen}
+              onClick={() => setIsMobileNavOpen((open) => !open)}
+              className="p-2 rounded-lg hover:bg-green-50 transition"
             >
-              Menu
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-green-800"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
             </button>
-            <button
-              type="button"
-              onClick={scrollToAbout}
-              className="hover:text-green-700 transition"
-            >
-              About
-            </button>
-            <button
-              type="button"
-              onClick={scrollToContact}
-              className="hover:text-green-700 transition"
-            >
-              Contact
-            </button>
-          </nav>
+            {isMobileNavOpen && (
+              <nav className="absolute right-0 top-12 z-10 w-36 rounded-xl border border-green-100 bg-white p-2 shadow-lg">
+                <button
+                  type="button"
+                  onClick={scrollToMenu}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-green-50 transition"
+                >
+                  Menu
+                </button>
+                <button
+                  type="button"
+                  onClick={scrollToAbout}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-green-50 transition"
+                >
+                  About
+                </button>
+                <button
+                  type="button"
+                  onClick={scrollToContact}
+                  className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-green-50 transition"
+                >
+                  Contact
+                </button>
+              </nav>
+            )}
+          </div>
         </div>
       </header>
 
