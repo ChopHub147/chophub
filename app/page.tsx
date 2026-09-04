@@ -454,6 +454,29 @@ export default function Home() {
               Order Now
             </button>
           </div>
+          <nav className="flex md:hidden items-center justify-center gap-6 pt-3 text-sm font-medium">
+            <button
+              type="button"
+              onClick={scrollToMenu}
+              className="hover:text-green-700 transition"
+            >
+              Menu
+            </button>
+            <button
+              type="button"
+              onClick={scrollToAbout}
+              className="hover:text-green-700 transition"
+            >
+              About
+            </button>
+            <button
+              type="button"
+              onClick={scrollToContact}
+              className="hover:text-green-700 transition"
+            >
+              Contact
+            </button>
+          </nav>
         </div>
       </header>
 
