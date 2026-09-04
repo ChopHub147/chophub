@@ -666,10 +666,11 @@ export default function Home() {
                   )}
 
                   {dish.type === "meat" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-green-900 mb-2">
+                    <details className="mb-4">
+                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
                         Choose your side
-                      </label>
+                        <span className="float-right text-green-600">+</span>
+                      </summary>
                       <select
                         value={selectedPairing[dish.id] || ""}
                         onChange={(e) =>
@@ -678,7 +679,7 @@ export default function Home() {
                             [dish.id]: e.target.value,
                           }))
                         }
-                        className="w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="mt-2 w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <option value="">Select side — ₦1,000</option>
                         {pairingOptions.map((pairing) => (
@@ -687,7 +688,7 @@ export default function Home() {
                           </option>
                         ))}
                       </select>
-                    </div>
+                    </details>
                   )}
 
                   {dish.name !== "Parfait" && (
@@ -714,7 +715,7 @@ export default function Home() {
 
                   <details className="mb-4">
                     <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
-                      Drinks
+                      Chilled Drinks
                       <span className="float-right text-green-600">+</span>
                     </summary>
                     <div className="mt-2 flex gap-2">
