@@ -1020,7 +1020,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img
-              src="/chop_icon_white.png"
+              src="/Chop_icon_white.png"
               alt="ChopHub"
               className="w-8 h-8 rounded-full object-cover"
             />
