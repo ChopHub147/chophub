@@ -184,12 +184,12 @@ export default function Home() {
     },
     {
       id: 16,
-      name: "Abacha",
+      name: "Abáchà",
       price: 4000,
       desc: "Traditional African salad prepared with delicious local ingredients.",
       image: "/abacha.JPG",
       type: "special" as const,
-      sectionTitle: "Abacha",
+      sectionTitle: "Abáchà",
     },
   ];
 
@@ -1014,7 +1014,24 @@ export default function Home() {
                 </p>
                 <p>
                   <span className="block text-sm font-semibold text-green-800">Social media</span>
-                  Instagram · Facebook · TikTok: @chophub
+                  <a
+                    href="https://x.com/chophubfood"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-green-700"
+                  >
+                    X/Twitter
+                  </a>
+                  {" · "}
+                  <a
+                    href="https://www.facebook.com/share/1BW844CEN9/?mibextid=wwXIfr"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-green-700"
+                  >
+                    Facebook
+                  </a>
+                  {" · Instagram · TikTok: @chophub"}
                 </p>
               </div>
             </div>
