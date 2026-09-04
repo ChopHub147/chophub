@@ -573,10 +573,11 @@ export default function Home() {
                   <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4">{dish.desc}</p>
 
                   {dish.type === "soup" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-green-900 mb-2">
+                    <details className="mb-4">
+                      <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
                         Choose your swallow
-                      </label>
+                      <span className="float-right text-green-600">+</span>
+                      </summary>
                       <select
                         value={selectedSwallow[dish.id] || ""}
                         onChange={(e) =>
@@ -585,7 +586,7 @@ export default function Home() {
                             [dish.id]: e.target.value,
                           }))
                         }
-                        className="w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="mt-2 w-full border border-green-200 rounded-lg px-4 py-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-green-500"
                       >
                         <option value="">Select swallow</option>
                         {swallowOptions.map((swallow) => (
@@ -594,7 +595,7 @@ export default function Home() {
                           </option>
                         ))}
                       </select>
-                    </div>
+                    </details>
                   )}
 
                   {dish.type === "rice" && (
@@ -708,11 +709,12 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-green-900 mb-2">
+                  <details className="mb-4">
+                    <summary className="cursor-pointer list-none text-sm font-semibold text-green-900">
                       Drinks
-                    </label>
-                    <div className="flex gap-2">
+                      <span className="float-right text-green-600">+</span>
+                    </summary>
+                    <div className="mt-2 flex gap-2">
                       <select
                         value={selectedDrink[dish.id]?.name || ""}
                         onChange={(e) =>
@@ -763,7 +765,7 @@ export default function Home() {
                         />
                       )}
                     </div>
-                  </div>
+                  </details>
 
                   <button
                     onClick={() => addToCart(dish)}
