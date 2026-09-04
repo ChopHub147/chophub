@@ -540,8 +540,12 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative">
-        <div className="max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
+      <section
+        className="relative overflow-hidden bg-cover bg-center"
+        style={{ backgroundImage: "url('/chophub-background.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/55" aria-hidden="true" />
+        <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24 text-center">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-green-900">
             Authentic Calabar Food
             <br />
