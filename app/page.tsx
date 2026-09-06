@@ -19,6 +19,7 @@ type DatabaseMeal = {
   price: number;
   image: string;
   category: string;
+  available?: boolean;
 };
 
 type Dish = {
@@ -28,6 +29,7 @@ type Dish = {
   desc: string;
   image: string;
   type: "soup" | "meat" | "fish" | "rice" | "special";
+  available?: boolean;
   sectionTitle?: string;
 };
 
@@ -133,7 +135,8 @@ export default function Home() {
       price: 5000,
       desc: "Rich traditional Afang soup prepared with fresh ingredients and assorted proteins.",
       image: "/afang.jpeg",
-      type: "soup" as const,
+      type: "soup",
+      available: true,
     },
     {
       id: 2,
@@ -141,7 +144,8 @@ export default function Home() {
       price: 5000,
       desc: "Fresh and delicious traditional vegetable soup loaded with assorted ingredients.",
       image: "/edikanikong.jpeg",
-      type: "soup" as const,
+      type: "soup",
+      available: true,
     },
     {
       id: 3,
@@ -292,6 +296,7 @@ export default function Home() {
             price: meal.price,
             desc: meal.description,
             image: meal.image,
+            available: meal.available,
             type: (meal.category === "soup-swallow"
               ? "soup"
               : meal.category === "rice"
@@ -735,7 +740,9 @@ export default function Home() {
                         : "Dessert"}
                   <span className="ml-2 text-sm font-medium text-green-600">View all →</span>
                 </Link>
-                <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition border border-green-100">
+                <div className={`bg-white rounded-2xl overflow-hidden shadow-sm transition border border-green-100 ${
+                  dish.available === false ? "opacity-75" : "hover:shadow-md"
+                }`}>
                 <div className="h-40 md:h-64 overflow-hidden">
                     <img
                       src={dish.image}
@@ -751,19 +758,28 @@ export default function Home() {
                       <span className="text-green-700 font-bold text-xs md:text-base">
                         {dish.type === "rice" ? "From " : ""}₦{dish.price.toLocaleString()}
                       </span>
-                    </div>
+                  </div>
+                  {dish.available === false && (
+                    <p className="mb-2 text-sm font-semibold text-red-600">Currently unavailable</p>
+                  )}
                   <p className="text-gray-600 text-xs md:text-sm mb-3 md:mb-4">{dish.desc}</p>
 
                   <button
-                    onClick={() => openCustomization(dish)}
-                    disabled={addedFeedback[dish.id]}
-                    className={`w-full py-2.5 rounded-full font-medium transition ${
-                      addedFeedback[dish.id]
-                        ? "bg-green-500 text-white cursor-default"
-                        : "bg-green-600 hover:bg-green-700 text-white"
-                    }`}
+                   onClick={() => openCustomization(dish)}
+                   disabled={dish.available === false || addedFeedback[dish.id]}
+                   className={`w-full py-2.5 rounded-full font-medium transition ${
+                     dish.available === false
+                       ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                       : addedFeedback[dish.id]
+                       ? "bg-green-500 text-white cursor-default"
+                       : "bg-green-600 hover:bg-green-700 text-white"
+                   }`}
                   >
-                    {addedFeedback[dish.id] ? "Added! ✓" : "Customize & Add"}
+                   {dish.available === false
+                     ? "Unavailable"
+                     : addedFeedback[dish.id]
+                       ? "Added! ✓"
+                       : "Customize & Add"}
                   </button>
                   </div>
                 </div>

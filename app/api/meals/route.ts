@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   const meals = await supabaseAdminRequest(
-    "meals?select=id,name,description,price,image,category&available=eq.true&order=id.asc"
+    "meals?select=id,name,description,price,image,category,available&order=id.asc"
   );
 
   return NextResponse.json(meals, {

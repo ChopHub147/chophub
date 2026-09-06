@@ -8,13 +8,14 @@ type DatabaseMeal = {
   price: number;
   image: string;
   category: string;
+  available: boolean;
 };
 
-type MenuDish = [string, number, string, string, string];
+type MenuDish = [string, number, string, string, string, boolean?];
 
 const dishes: MenuDish[] = [
-  ["Afang Soup", 5000, "Rich traditional soup prepared with fresh ingredients.", "/afang.jpeg", "soup-swallow"],
-  ["Edikang Ikong", 5000, "Traditional vegetable soup loaded with assorted ingredients.", "/edikanikong.jpeg", "soup-swallow"],
+  ["Afang Soup", 5000, "Rich traditional soup prepared with fresh ingredients.", "/afang.jpeg", "soup-swallow", true],
+  ["Edikang Ikong", 5000, "Traditional vegetable soup loaded with assorted ingredients.", "/edikanikong.jpeg", "soup-swallow", true],
   ["Fisherman Soup", 8000, "Calabar-style seafood soup packed with fresh fish and seafood.", "/fisherman_soup.JPG", "soup-swallow"],
   ["White Soup", 5500, "Traditional white soup with a rich, aromatic taste.", "/white_soup.jpg", "soup-swallow"],
   ["Ogbono Soup", 5000, "Rich, smooth ogbono soup prepared with traditional spices.", "/ogbono.jpg", "soup-swallow"],
@@ -67,7 +68,7 @@ export default async function MenuPage({
 
   try {
     const meals = await supabaseAdminRequest<DatabaseMeal[]>(
-      "meals?select=id,name,description,price,image,category&available=eq.true&order=id.asc"
+      "meals?select=id,name,description,price,image,category,available&order=id.asc"
     );
     menuDishes = meals.map((meal) => [
       meal.name,
@@ -75,6 +76,7 @@ export default async function MenuPage({
       meal.description,
       meal.image,
       meal.category,
+      meal.available,
     ]);
   } catch {
     // Keep the bundled menu available if Supabase is temporarily unavailable.
@@ -107,8 +109,10 @@ export default async function MenuPage({
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 md:gap-6">
-          {filteredDishes.map(([name, price, description, image]) => (
-            <article key={name} className="bg-white rounded-2xl overflow-hidden border border-green-100 shadow-sm">
+          {filteredDishes.map(([name, price, description, image, , available = true]) => (
+            <article key={name} className={`bg-white rounded-2xl overflow-hidden border border-green-100 shadow-sm ${
+              available ? "" : "opacity-75"
+            }`}>
               <div className="h-32 md:h-44 overflow-hidden">
                 <img src={image} alt={name} className="w-full h-full object-cover" />
               </div>
@@ -120,12 +124,19 @@ export default async function MenuPage({
                   </span>
                 </div>
                 <p className="text-xs md:text-sm text-gray-600 mt-2">{description}</p>
-                <Link
-                  href={`/?dish=${dishIds[name]}&returnCategory=${category ?? ""}#menu`}
-                  className="mt-4 block rounded-full bg-green-600 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-green-700"
-                >
-                  Customize &amp; Add
-                </Link>
+                {!available && <p className="mt-3 text-sm font-semibold text-red-600">Currently unavailable</p>}
+                {available ? (
+                  <Link
+                    href={`/?dish=${dishIds[name]}&returnCategory=${category ?? ""}#menu`}
+                    className="mt-4 block rounded-full bg-green-600 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-green-700"
+                  >
+                    Customize &amp; Add
+                  </Link>
+                ) : (
+                  <span className="mt-4 block rounded-full bg-gray-200 py-2.5 text-center text-sm font-semibold text-gray-500">
+                    Unavailable
+                  </span>
+                )}
               </div>
             </article>
           ))}
