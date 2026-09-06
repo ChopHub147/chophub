@@ -285,7 +285,6 @@ export default function Home() {
         return response.json() as Promise<DatabaseMeal[]>;
       })
       .then((meals) => {
-        if (meals.length === 0) return;
         setDishes(
           meals.map((meal) => ({
             id: meal.id,

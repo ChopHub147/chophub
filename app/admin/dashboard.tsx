@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 type Meal = {
   id: number;
   name: string;
+  description: string;
   price: number;
+  category: string;
+  image: string;
   available: boolean;
 };
 
@@ -16,6 +19,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [isLoadingMeals, setIsLoadingMeals] = useState(true);
   const [mealError, setMealError] = useState("");
+  const [savingMealId, setSavingMealId] = useState<number | null>(null);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -50,6 +54,21 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
       );
       setMealError("That availability change could not be saved.");
     }
+  };
+
+  const updateMeal = async (meal: Meal) => {
+    setSavingMealId(meal.id);
+    setMealError("");
+    const response = await fetch("/api/admin/meals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(meal),
+    });
+
+    if (!response.ok) {
+      setMealError("That meal update could not be saved.");
+    }
+    setSavingMealId(null);
   };
 
   const signOut = async () => {
@@ -122,14 +141,27 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
             <div className="pt-5">
               <h2 className="text-xl font-bold text-green-900">Meals & prices</h2>
               <p className="mt-1 text-sm text-gray-600">
-                Menu editing is the next step. Current meal prices remain managed in the
-                site menu until a database is connected.
+                Edit the customer-facing meal details here. Changes are saved in Supabase.
               </p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {meals.map((meal) => (
-                  <div key={meal.id} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
-                    <span className="font-medium text-green-900">{meal.name}</span>
-                    <span className="text-xs text-gray-500">ChopHub-managed</span>
+                  <div key={meal.id} className="rounded-xl border border-green-100 p-4">
+                    <div className="grid gap-2">
+                      <input className="rounded-lg border border-green-200 px-3 py-2 font-medium" value={meal.name} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, name: event.target.value } : item))} />
+                      <textarea className="rounded-lg border border-green-200 px-3 py-2 text-sm" value={meal.description} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, description: event.target.value } : item))} />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input type="number" className="rounded-lg border border-green-200 px-3 py-2" value={meal.price} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, price: Number(event.target.value) } : item))} />
+                        <select className="rounded-lg border border-green-200 px-3 py-2" value={meal.category} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, category: event.target.value } : item))}>
+                          <option value="soup-swallow">Soup and Swallow</option>
+                          <option value="meat">Meat</option>
+                          <option value="rice">Rice</option>
+                          <option value="dessert">Dessert</option>
+                        </select>
+                      </div>
+                      <button type="button" onClick={() => updateMeal(meal)} disabled={savingMealId === meal.id} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                        {savingMealId === meal.id ? "Saving..." : "Save changes"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -6,6 +6,11 @@ import { supabaseAdminRequest } from "@/lib/supabase-admin";
 type MealUpdate = {
   id?: unknown;
   available?: unknown;
+  name?: unknown;
+  description?: unknown;
+  price?: unknown;
+  category?: unknown;
+  image?: unknown;
 };
 
 async function requireAdmin() {
@@ -29,16 +34,23 @@ export async function PATCH(request: Request) {
 
   const body = (await request.json()) as MealUpdate;
   const id = typeof body.id === "number" ? body.id : null;
-  const available = typeof body.available === "boolean" ? body.available : null;
+  const updates = {
+    ...(typeof body.available === "boolean" ? { available: body.available } : {}),
+    ...(typeof body.name === "string" ? { name: body.name.trim() } : {}),
+    ...(typeof body.description === "string" ? { description: body.description.trim() } : {}),
+    ...(typeof body.price === "number" ? { price: body.price } : {}),
+    ...(typeof body.category === "string" ? { category: body.category } : {}),
+    ...(typeof body.image === "string" ? { image: body.image.trim() } : {}),
+  };
 
-  if (id === null || available === null) {
-    return NextResponse.json({ error: "A meal id and availability are required" }, { status: 400 });
+  if (id === null || Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: "A meal id and at least one valid field are required" }, { status: 400 });
   }
 
   const meals = await supabaseAdminRequest(`meals?id=eq.${id}`, {
     method: "PATCH",
     headers: { Prefer: "return=representation" },
-    body: JSON.stringify({ available }),
+    body: JSON.stringify(updates),
   });
 
   return NextResponse.json(meals);

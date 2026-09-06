@@ -69,15 +69,13 @@ export default async function MenuPage({
     const meals = await supabaseAdminRequest<DatabaseMeal[]>(
       "meals?select=id,name,description,price,image,category&available=eq.true&order=id.asc"
     );
-    if (meals.length > 0) {
-      menuDishes = meals.map((meal) => [
-        meal.name,
-        meal.price,
-        meal.description,
-        meal.image,
-        meal.category,
-      ]);
-    }
+    menuDishes = meals.map((meal) => [
+      meal.name,
+      meal.price,
+      meal.description,
+      meal.image,
+      meal.category,
+    ]);
   } catch {
     // Keep the bundled menu available if Supabase is temporarily unavailable.
   }
