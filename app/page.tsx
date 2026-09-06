@@ -12,6 +12,25 @@ type CartItem = {
   image: string;
 };
 
+type DatabaseMeal = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+};
+
+type Dish = {
+  id: number;
+  name: string;
+  price: number;
+  desc: string;
+  image: string;
+  type: "soup" | "meat" | "fish" | "rice" | "special";
+  sectionTitle?: string;
+};
+
 const cartStorageKey = "chophub-cart";
 
 const getStoredCart = (): CartItem[] => {
@@ -107,7 +126,7 @@ export default function Home() {
     { name: "Desperado", price: 1500 },
   ];
 
-  const dishes = [
+  const fallbackDishes: Dish[] = [
     {
       id: 1,
       name: "Afang Soup",
@@ -239,6 +258,8 @@ export default function Home() {
       sectionTitle: "Abáchà",
     },
   ];
+  const [dishes, setDishes] = useState<Dish[]>(fallbackDishes);
+
   const featuredDishes = dishes.filter((dish) =>
     [1, 3, 12, 15].includes(dish.id)
   );
@@ -256,6 +277,37 @@ export default function Home() {
     (typeof dishes)[number] | null
   >(null);
   const [customizationQuantity, setCustomizationQuantity] = useState(1);
+
+  useEffect(() => {
+    fetch("/api/meals")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load meals");
+        return response.json() as Promise<DatabaseMeal[]>;
+      })
+      .then((meals) => {
+        setDishes(
+          meals.map((meal) => ({
+            id: meal.id,
+            name: meal.name,
+            price: meal.price,
+            desc: meal.description,
+            image: meal.image,
+            type: (meal.category === "soup-swallow"
+              ? "soup"
+              : meal.category === "rice"
+                ? "rice"
+                : meal.name === "Fresh Roasted Fish"
+                  ? "fish"
+                  : meal.category === "meat"
+                    ? "meat"
+                    : "special") as Dish["type"],
+          }))
+        );
+      })
+      .catch(() => {
+        // Keep the bundled menu available if the database is temporarily unavailable.
+      });
+  }, []);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {

@@ -1,6 +1,18 @@
 import Link from "next/link";
+import { supabaseAdminRequest } from "@/lib/supabase-admin";
 
-const dishes = [
+type DatabaseMeal = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+};
+
+type MenuDish = [string, number, string, string, string];
+
+const dishes: MenuDish[] = [
   ["Afang Soup", 5000, "Rich traditional soup prepared with fresh ingredients.", "/afang.jpeg", "soup-swallow"],
   ["Edikang Ikong", 5000, "Traditional vegetable soup loaded with assorted ingredients.", "/edikanikong.jpeg", "soup-swallow"],
   ["Fisherman Soup", 8000, "Calabar-style seafood soup packed with fresh fish and seafood.", "/fisherman_soup.JPG", "soup-swallow"],
@@ -17,7 +29,7 @@ const dishes = [
   ["Parfait", 5000, "A creamy, layered parfait treat.", "/Parfait.webp", "dessert"],
   ["Fresh Roasted Fish", 8000, "Well-seasoned roasted fish served with spicy pepper sauce.", "/grilled_fish.JPG", "meat"],
   ["Abáchà", 4000, "Traditional African salad prepared with delicious local ingredients.", "/abacha.JPG", "dessert"],
-] as const;
+];
 
 const dishIds: Record<string, number> = {
   "Afang Soup": 1,
@@ -51,9 +63,26 @@ export default async function MenuPage({
   searchParams: Promise<{ category?: string }>;
 }) {
   const category = (await searchParams).category;
+  let menuDishes = dishes;
+
+  try {
+    const meals = await supabaseAdminRequest<DatabaseMeal[]>(
+      "meals?select=id,name,description,price,image,category&available=eq.true&order=id.asc"
+    );
+    menuDishes = meals.map((meal) => [
+      meal.name,
+      meal.price,
+      meal.description,
+      meal.image,
+      meal.category,
+    ]);
+  } catch {
+    // Keep the bundled menu available if Supabase is temporarily unavailable.
+  }
+
   const filteredDishes = category && category in categoryNames
-    ? dishes.filter((dish) => dish[4] === category)
-    : dishes;
+    ? menuDishes.filter((dish) => dish[4] === category)
+    : menuDishes;
   const title = category && category in categoryNames
     ? categoryNames[category as keyof typeof categoryNames]
     : "Full Menu";

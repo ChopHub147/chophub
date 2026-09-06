@@ -3,53 +3,78 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+type Meal = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  image: string;
+  available: boolean;
+};
+
 export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<"menu" | "availability" | "orders">("menu");
-  const [availableMeals, setAvailableMeals] = useState<Record<string, boolean>>({});
-  const meals = [
-    "Afang Soup",
-    "Edikang Ikong",
-    "Indigenous 404",
-    "Indigenous Bush Meat",
-    "Fisherman Soup",
-    "White Soup",
-    "Ogbono Soup",
-    "Okro Soup",
-    "Egusi Soup",
-    "Oha Soup",
-    "Fresh Roasted Fish",
-    "Jollof Rice",
-    "Rice & Stew",
-    "Shawarma",
-    "Parfait",
-    "Abáchà",
-  ];
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [isLoadingMeals, setIsLoadingMeals] = useState(true);
+  const [mealError, setMealError] = useState("");
+  const [savingMealId, setSavingMealId] = useState<number | null>(null);
+  const [pendingAvailability, setPendingAvailability] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      const stored = window.localStorage.getItem("chophub-admin-availability");
-      if (!stored) return;
-
-      try {
-        const parsed: unknown = JSON.parse(stored);
-        if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
-          setAvailableMeals(parsed as Record<string, boolean>);
-        }
-      } catch {
-        window.localStorage.removeItem("chophub-admin-availability");
-      }
+      fetch("/api/admin/meals")
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Could not load meals");
+          return response.json() as Promise<Meal[]>;
+        })
+        .then(setMeals)
+        .catch(() => setMealError("Meals could not be loaded. Check that Supabase has been seeded."))
+        .finally(() => setIsLoadingMeals(false));
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const toggleAvailability = (meal: string) => {
-    setAvailableMeals((current) => {
-      const next = { ...current, [meal]: !(current[meal] ?? true) };
-      window.localStorage.setItem("chophub-admin-availability", JSON.stringify(next));
-      return next;
+  const saveAvailability = async (meal: Meal) => {
+    const available = pendingAvailability[meal.id] ?? meal.available;
+    setSavingMealId(meal.id);
+    setMealError("");
+    const response = await fetch("/api/admin/meals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: meal.id, available }),
     });
+
+    if (!response.ok) {
+      setMealError("That availability change could not be saved.");
+    } else {
+      setMeals((current) =>
+        current.map((item) => (item.id === meal.id ? { ...item, available } : item))
+      );
+      setPendingAvailability((current) => {
+        const next = { ...current };
+        delete next[meal.id];
+        return next;
+      });
+    }
+    setSavingMealId(null);
+  };
+
+  const updateMeal = async (meal: Meal) => {
+    setSavingMealId(meal.id);
+    setMealError("");
+    const response = await fetch("/api/admin/meals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(meal),
+    });
+
+    if (!response.ok) {
+      setMealError("That meal update could not be saved.");
+    }
+    setSavingMealId(null);
   };
 
   const signOut = async () => {
@@ -87,7 +112,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            ["16", "Menu items"],
+            [String(meals.length), "Menu items"],
             ["1", "Owner account"],
             ["0", "Vendor logins"],
           ].map(([value, label]) => (
@@ -122,14 +147,27 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
             <div className="pt-5">
               <h2 className="text-xl font-bold text-green-900">Meals & prices</h2>
               <p className="mt-1 text-sm text-gray-600">
-                Menu editing is the next step. Current meal prices remain managed in the
-                site menu until a database is connected.
+                Edit the customer-facing meal details here. Changes are saved in Supabase.
               </p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {meals.map((meal) => (
-                  <div key={meal} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
-                    <span className="font-medium text-green-900">{meal}</span>
-                    <span className="text-xs text-gray-500">ChopHub-managed</span>
+                  <div key={meal.id} className="rounded-xl border border-green-100 p-4">
+                    <div className="grid gap-2">
+                      <input className="rounded-lg border border-green-200 px-3 py-2 font-medium" value={meal.name} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, name: event.target.value } : item))} />
+                      <textarea className="rounded-lg border border-green-200 px-3 py-2 text-sm" value={meal.description} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, description: event.target.value } : item))} />
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="text-xs font-semibold text-gray-600">Price (₦)<input type="number" min="0" className="mt-1 w-full rounded-lg border border-green-200 px-3 py-2" value={meal.price} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, price: Number(event.target.value) } : item))} /></label>
+                        <select className="rounded-lg border border-green-200 px-3 py-2" value={meal.category} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, category: event.target.value } : item))}>
+                          <option value="soup-swallow">Soup and Swallow</option>
+                          <option value="meat">Meat</option>
+                          <option value="rice">Rice</option>
+                          <option value="dessert">Dessert</option>
+                        </select>
+                      </div>
+                      <button type="button" onClick={() => updateMeal(meal)} disabled={savingMealId === meal.id} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+                        {savingMealId === meal.id ? "Saving..." : "Save changes"}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -140,23 +178,39 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
               <h2 className="text-xl font-bold text-green-900">Availability</h2>
               <p className="mt-1 text-sm text-gray-600">
                 Toggle an item off when it is temporarily unavailable. This setting is
-                saved in this browser for now.
+                saved in Supabase and applies across devices.
               </p>
+              {isLoadingMeals && <p className="mt-4 text-sm text-gray-600">Loading meals...</p>}
+              {mealError && <p className="mt-4 text-sm text-red-600">{mealError}</p>}
               <div className="mt-4 space-y-2">
                 {meals.map((meal) => {
-                  const isAvailable = availableMeals[meal] ?? true;
                   return (
-                    <div key={meal} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
-                      <span className="font-medium text-green-900">{meal}</span>
-                      <button
-                        type="button"
-                        onClick={() => toggleAvailability(meal)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          isAvailable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-700"
-                        }`}
+                    <div key={meal.id} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
+                      <span className="font-medium text-green-900">{meal.name}</span>
+                      <div className="flex items-center gap-2">
+                      <select
+                         aria-label={`Availability for ${meal.name}`}
+                         value={String(pendingAvailability[meal.id] ?? meal.available)}
+                         onChange={(event) =>
+                           setPendingAvailability((current) => ({
+                             ...current,
+                             [meal.id]: event.target.value === "true",
+                           }))
+                         }
+                         className="rounded-lg border border-green-200 px-2 py-1.5 text-xs font-semibold"
                       >
-                        {isAvailable ? "Available" : "Unavailable"}
+                         <option value="true">Available</option>
+                         <option value="false">Unavailable</option>
+                      </select>
+                      <button
+                         type="button"
+                         onClick={() => saveAvailability(meal)}
+                         disabled={savingMealId === meal.id || pendingAvailability[meal.id] === undefined}
+                         className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                      >
+                         {savingMealId === meal.id ? "Saving..." : "Save"}
                       </button>
+                      </div>
                     </div>
                   );
                 })}
