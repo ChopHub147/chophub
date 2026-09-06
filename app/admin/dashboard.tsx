@@ -20,6 +20,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [isLoadingMeals, setIsLoadingMeals] = useState(true);
   const [mealError, setMealError] = useState("");
   const [savingMealId, setSavingMealId] = useState<number | null>(null);
+  const [pendingAvailability, setPendingAvailability] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -36,12 +37,10 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const toggleAvailability = async (meal: Meal) => {
-    const available = !meal.available;
-    setMeals((current) =>
-      current.map((item) => (item.id === meal.id ? { ...item, available } : item))
-    );
-
+  const saveAvailability = async (meal: Meal) => {
+    const available = pendingAvailability[meal.id] ?? meal.available;
+    setSavingMealId(meal.id);
+    setMealError("");
     const response = await fetch("/api/admin/meals", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -49,11 +48,18 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     });
 
     if (!response.ok) {
-      setMeals((current) =>
-        current.map((item) => (item.id === meal.id ? { ...item, available: meal.available } : item))
-      );
       setMealError("That availability change could not be saved.");
+    } else {
+      setMeals((current) =>
+        current.map((item) => (item.id === meal.id ? { ...item, available } : item))
+      );
+      setPendingAvailability((current) => {
+        const next = { ...current };
+        delete next[meal.id];
+        return next;
+      });
     }
+    setSavingMealId(null);
   };
 
   const updateMeal = async (meal: Meal) => {
@@ -150,7 +156,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                       <input className="rounded-lg border border-green-200 px-3 py-2 font-medium" value={meal.name} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, name: event.target.value } : item))} />
                       <textarea className="rounded-lg border border-green-200 px-3 py-2 text-sm" value={meal.description} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, description: event.target.value } : item))} />
                       <div className="grid grid-cols-2 gap-2">
-                        <input type="number" className="rounded-lg border border-green-200 px-3 py-2" value={meal.price} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, price: Number(event.target.value) } : item))} />
+                        <label className="text-xs font-semibold text-gray-600">Price (₦)<input type="number" min="0" className="mt-1 w-full rounded-lg border border-green-200 px-3 py-2" value={meal.price} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, price: Number(event.target.value) } : item))} /></label>
                         <select className="rounded-lg border border-green-200 px-3 py-2" value={meal.category} onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, category: event.target.value } : item))}>
                           <option value="soup-swallow">Soup and Swallow</option>
                           <option value="meat">Meat</option>
@@ -181,15 +187,30 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                   return (
                     <div key={meal.id} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
                       <span className="font-medium text-green-900">{meal.name}</span>
-                      <button
-                        type="button"
-                        onClick={() => toggleAvailability(meal)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          meal.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-700"
-                        }`}
+                      <div className="flex items-center gap-2">
+                      <select
+                         aria-label={`Availability for ${meal.name}`}
+                         value={String(pendingAvailability[meal.id] ?? meal.available)}
+                         onChange={(event) =>
+                           setPendingAvailability((current) => ({
+                             ...current,
+                             [meal.id]: event.target.value === "true",
+                           }))
+                         }
+                         className="rounded-lg border border-green-200 px-2 py-1.5 text-xs font-semibold"
                       >
-                        {meal.available ? "Available" : "Unavailable"}
+                         <option value="true">Available</option>
+                         <option value="false">Unavailable</option>
+                      </select>
+                      <button
+                         type="button"
+                         onClick={() => saveAvailability(meal)}
+                         disabled={savingMealId === meal.id || pendingAvailability[meal.id] === undefined}
+                         className="rounded-full bg-green-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+                      >
+                         {savingMealId === meal.id ? "Saving..." : "Save"}
                       </button>
+                      </div>
                     </div>
                   );
                 })}
