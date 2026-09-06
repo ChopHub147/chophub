@@ -3,53 +3,53 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+type Meal = {
+  id: number;
+  name: string;
+  price: number;
+  available: boolean;
+};
+
 export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<"menu" | "availability" | "orders">("menu");
-  const [availableMeals, setAvailableMeals] = useState<Record<string, boolean>>({});
-  const meals = [
-    "Afang Soup",
-    "Edikang Ikong",
-    "Indigenous 404",
-    "Indigenous Bush Meat",
-    "Fisherman Soup",
-    "White Soup",
-    "Ogbono Soup",
-    "Okro Soup",
-    "Egusi Soup",
-    "Oha Soup",
-    "Fresh Roasted Fish",
-    "Jollof Rice",
-    "Rice & Stew",
-    "Shawarma",
-    "Parfait",
-    "Abáchà",
-  ];
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [isLoadingMeals, setIsLoadingMeals] = useState(true);
+  const [mealError, setMealError] = useState("");
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      const stored = window.localStorage.getItem("chophub-admin-availability");
-      if (!stored) return;
-
-      try {
-        const parsed: unknown = JSON.parse(stored);
-        if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
-          setAvailableMeals(parsed as Record<string, boolean>);
-        }
-      } catch {
-        window.localStorage.removeItem("chophub-admin-availability");
-      }
+      fetch("/api/admin/meals")
+        .then(async (response) => {
+          if (!response.ok) throw new Error("Could not load meals");
+          return response.json() as Promise<Meal[]>;
+        })
+        .then(setMeals)
+        .catch(() => setMealError("Meals could not be loaded. Check that Supabase has been seeded."))
+        .finally(() => setIsLoadingMeals(false));
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const toggleAvailability = (meal: string) => {
-    setAvailableMeals((current) => {
-      const next = { ...current, [meal]: !(current[meal] ?? true) };
-      window.localStorage.setItem("chophub-admin-availability", JSON.stringify(next));
-      return next;
+  const toggleAvailability = async (meal: Meal) => {
+    const available = !meal.available;
+    setMeals((current) =>
+      current.map((item) => (item.id === meal.id ? { ...item, available } : item))
+    );
+
+    const response = await fetch("/api/admin/meals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: meal.id, available }),
     });
+
+    if (!response.ok) {
+      setMeals((current) =>
+        current.map((item) => (item.id === meal.id ? { ...item, available: meal.available } : item))
+      );
+      setMealError("That availability change could not be saved.");
+    }
   };
 
   const signOut = async () => {
@@ -87,7 +87,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
-            ["16", "Menu items"],
+            [String(meals.length), "Menu items"],
             ["1", "Owner account"],
             ["0", "Vendor logins"],
           ].map(([value, label]) => (
@@ -127,8 +127,8 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
               </p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
                 {meals.map((meal) => (
-                  <div key={meal} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
-                    <span className="font-medium text-green-900">{meal}</span>
+                  <div key={meal.id} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
+                    <span className="font-medium text-green-900">{meal.name}</span>
                     <span className="text-xs text-gray-500">ChopHub-managed</span>
                   </div>
                 ))}
@@ -140,22 +140,23 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
               <h2 className="text-xl font-bold text-green-900">Availability</h2>
               <p className="mt-1 text-sm text-gray-600">
                 Toggle an item off when it is temporarily unavailable. This setting is
-                saved in this browser for now.
+                saved in Supabase and applies across devices.
               </p>
+              {isLoadingMeals && <p className="mt-4 text-sm text-gray-600">Loading meals...</p>}
+              {mealError && <p className="mt-4 text-sm text-red-600">{mealError}</p>}
               <div className="mt-4 space-y-2">
                 {meals.map((meal) => {
-                  const isAvailable = availableMeals[meal] ?? true;
                   return (
-                    <div key={meal} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
-                      <span className="font-medium text-green-900">{meal}</span>
+                    <div key={meal.id} className="flex items-center justify-between rounded-xl border border-green-100 p-3">
+                      <span className="font-medium text-green-900">{meal.name}</span>
                       <button
                         type="button"
                         onClick={() => toggleAvailability(meal)}
                         className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                          isAvailable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-700"
+                          meal.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {isAvailable ? "Available" : "Unavailable"}
+                        {meal.available ? "Available" : "Unavailable"}
                       </button>
                     </div>
                   );
