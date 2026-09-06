@@ -92,9 +92,9 @@ export default async function MenuPage({
     <main className="min-h-screen bg-green-50 text-gray-900">
       <header className="bg-white border-b border-green-100">
         <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
-          <Link href="/" className="text-xl font-extrabold text-green-800">ChopHub</Link>
-          <Link href="/" className="text-sm font-semibold text-green-700 hover:text-green-900">
-            Back to Home
+          <Link href="/cooked-food" className="text-xl font-extrabold text-green-800">ChopHub</Link>
+          <Link href="/cooked-food" className="text-sm font-semibold text-green-700 hover:text-green-900">
+            Back to Cooked Food
           </Link>
         </div>
       </header>
@@ -127,7 +127,7 @@ export default async function MenuPage({
                 {!available && <p className="mt-3 text-sm font-semibold text-red-600">Currently unavailable</p>}
                 {available ? (
                   <Link
-                    href={`/?dish=${dishIds[name]}&returnCategory=${category ?? ""}#menu`}
+                    href={`/cooked-food?dish=${dishIds[name]}&returnCategory=${category ?? ""}#menu`}
                     className="mt-4 block rounded-full bg-green-600 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-green-700"
                   >
                     Customize &amp; Add
@@ -142,7 +142,7 @@ export default async function MenuPage({
           ))}
         </div>
         <div className="text-center mt-10">
-          <Link href="/#menu" className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-semibold">
+          <Link href="/cooked-food#menu" className="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full font-semibold">
             Customize and Order
           </Link>
         </div>
