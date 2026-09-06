@@ -3,7 +3,7 @@ import Link from "next/link";
 const shoppingSections = [
   ["🍲", "Cooked Food", "Ready-to-eat meals and treats.", "/cooked-food", "bg-green-100 text-green-800"],
   ["🛒", "Foodstuff", "Pantry essentials and ingredients.", "/foodstuff", "bg-amber-100 text-amber-800"],
-  ["🥬", "Uncooked Food", "Fresh ingredients for home cooking.", "/uncooked-food", "bg-emerald-100 text-emerald-800"],
+  ["🥬", "Fresh Food", "Fresh ingredients, fruits, and produce.", "/fresh-food", "bg-emerald-100 text-emerald-800"],
 ];
 
 export default function Home() {
