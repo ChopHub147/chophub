@@ -25,6 +25,8 @@ type CartItem = {
 const cartStorageKey = "chophub-cart";
 const categories = ["All", "Grains & Staples", "Flours & Baking", "Cooking Oils", "Canned & Packaged", "Seasonings", "Beverages", "Snacks", "Household"];
 
+const isImageUrl = (value: string) => value.startsWith("https://") || value.startsWith("http://") || value.startsWith("/");
+
 const products: Product[] = [
   { id: "foodstuff-garri-1kg", name: "Garri", category: "Grains & Staples", pack: "1 kg", price: 1800, description: "Crispy cassava flakes for drinks and meals.", icon: "🌾", available: true },
   { id: "foodstuff-rice-5kg", name: "Long-grain rice", category: "Grains & Staples", pack: "5 kg bag", price: 12500, description: "Everyday rice for family meals.", icon: "🍚", available: true },
@@ -111,7 +113,9 @@ export default function FoodstuffPage() {
         <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((product) => (
             <article key={product.id} className={`rounded-2xl border border-amber-100 bg-white p-4 shadow-sm ${product.available ? "" : "opacity-70"}`}>
-              <div className="flex h-24 items-center justify-center rounded-xl bg-amber-50 text-5xl">{product.icon}</div>
+              <div className="flex h-24 items-center justify-center overflow-hidden rounded-xl bg-amber-50 text-5xl">
+                {isImageUrl(product.icon) ? <img src={product.icon} alt={product.name} className="h-full w-full object-cover" /> : product.icon}
+              </div>
               <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-amber-700">{product.category}</p>
               <h2 className="mt-1 font-bold text-amber-950">{product.name}</h2>
               <p className="mt-1 text-xs text-gray-500">{product.pack}</p>
