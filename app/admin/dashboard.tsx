@@ -13,6 +13,16 @@ type Meal = {
   available: boolean;
 };
 
+type Order = {
+  id: number;
+  customer_name: string;
+  customer_phone: string;
+  delivery_area: string;
+  subtotal: number;
+  status: string;
+  created_at: string;
+};
+
 export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<"menu" | "availability" | "orders">("menu");
@@ -21,6 +31,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [mealError, setMealError] = useState("");
   const [savingMealId, setSavingMealId] = useState<number | null>(null);
   const [pendingAvailability, setPendingAvailability] = useState<Record<number, boolean>>({});
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -35,6 +46,16 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/orders")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load orders");
+        return response.json() as Promise<Order[]>;
+      })
+      .then(setOrders)
+      .catch(() => undefined);
   }, []);
 
   const saveAvailability = async (meal: Meal) => {
@@ -224,6 +245,19 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                 Orders currently arrive through WhatsApp. This workspace will show and
                 organize them here after order storage is connected.
               </p>
+              <div className="mt-4 space-y-2">
+                {orders.length === 0 && <p className="text-sm text-gray-500">No stored orders yet.</p>}
+                {orders.map((order) => (
+                  <div key={order.id} className="rounded-xl border border-green-100 p-4">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <p className="font-semibold text-green-900">Order #{order.id}</p>
+                      <span className="text-sm text-gray-500">{order.status}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-600">{order.customer_name} · {order.customer_phone} · {order.delivery_area}</p>
+                    <p className="mt-1 font-semibold text-green-700">₦{Number(order.subtotal).toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
               <a
                 href="https://wa.me/2348081688937"
                 target="_blank"
