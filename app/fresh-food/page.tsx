@@ -36,6 +36,7 @@ const products: FreshProduct[] = [
 export default function FreshFoodPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartCount, setCartCount] = useState(0);
+  const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const filteredProducts = useMemo(() => selectedCategory === "All" ? products : products.filter((product) => product.category === selectedCategory), [selectedCategory]);
 
   const addToCart = (product: FreshProduct) => {
@@ -48,6 +49,8 @@ export default function FreshFoodPage() {
     window.localStorage.setItem(cartStorageKey, JSON.stringify(nextCart));
     window.dispatchEvent(new Event("chophub-cart-updated"));
     setCartCount(nextCart.reduce((total, item) => total + item.quantity, 0));
+    setAddedProductId(product.id);
+    window.setTimeout(() => setAddedProductId(null), 1600);
   };
 
   return (
@@ -83,7 +86,7 @@ export default function FreshFoodPage() {
               <div className="mt-4 flex items-center justify-between gap-2">
                 <span className="font-bold text-emerald-800">₦{product.price.toLocaleString()}</span>
                 <button type="button" disabled={product.stock === "Unavailable"} onClick={() => addToCart(product)} className="rounded-full bg-emerald-600 px-3 py-2 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500">
-                  {product.stock === "Unavailable" ? "Unavailable" : "Add"}
+                  {product.stock === "Unavailable" ? "Unavailable" : addedProductId === product.id ? "Added ✓" : "Add"}
                 </button>
               </div>
             </article>
