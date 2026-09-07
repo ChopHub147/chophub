@@ -187,6 +187,23 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     setUploadingImageId(null);
   };
 
+  const uploadMealImage = async (mealId: number, file: File) => {
+    setUploadingImageId(`meal-${mealId}`);
+    setMealError("");
+    const formData = new FormData();
+    formData.append("mealId", String(mealId));
+    formData.append("file", file);
+    const response = await fetch("/api/admin/meal-image", { method: "POST", body: formData });
+    if (!response.ok) {
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      setMealError(result.error || "That meal image could not be uploaded.");
+    } else {
+      const result = (await response.json()) as { url: string };
+      setMeals((current) => current.map((item) => item.id === mealId ? { ...item, image: result.url } : item));
+    }
+    setUploadingImageId(null);
+  };
+
   const addProduct = async () => {
     if (!newProduct.id.trim()) {
       setProductError("Give the new product a unique ID before saving.");
@@ -309,6 +326,14 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                           <option value="dessert">Dessert</option>
                         </select>
                       </div>
+                      <input className="rounded-lg border border-green-200 px-3 py-2" value={meal.image} placeholder="Image URL or uploaded image" onChange={(event) => setMeals((current) => current.map((item) => item.id === meal.id ? { ...item, image: event.target.value } : item))} />
+                      <label className="rounded-lg border border-dashed border-green-300 px-3 py-2 text-sm text-gray-600">
+                          {uploadingImageId === `meal-${meal.id}` ? "Uploading image..." : "Upload meal image"}
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="mt-1 block w-full text-xs" disabled={uploadingImageId === `meal-${meal.id}`} onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadMealImage(meal.id, file);
+                          }} />
+                      </label>
                       <button type="button" onClick={() => updateMeal(meal)} disabled={savingMealId === meal.id} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
                         {savingMealId === meal.id ? "Saving..." : "Save changes"}
                       </button>
