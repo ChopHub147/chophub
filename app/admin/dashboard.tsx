@@ -23,15 +23,35 @@ type Order = {
   created_at: string;
 };
 
+type Product = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  section: "foodstuff" | "fresh-food";
+  unit: string;
+  price: number;
+  image: string;
+  stock_status: "in_stock" | "limited" | "unavailable";
+};
+
 export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const router = useRouter();
-  const [activeSection, setActiveSection] = useState<"menu" | "availability" | "orders">("menu");
+  const [activeSection, setActiveSection] = useState<"menu" | "availability" | "products" | "orders">("menu");
   const [meals, setMeals] = useState<Meal[]>([]);
   const [isLoadingMeals, setIsLoadingMeals] = useState(true);
   const [mealError, setMealError] = useState("");
   const [savingMealId, setSavingMealId] = useState<number | null>(null);
   const [pendingAvailability, setPendingAvailability] = useState<Record<number, boolean>>({});
   const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [productError, setProductError] = useState("");
+  const [savingProductId, setSavingProductId] = useState<string | null>(null);
+  const [newProduct, setNewProduct] = useState<Product>({
+    id: "", name: "", description: "", category: "", section: "foodstuff", unit: "",
+    price: 0, image: "", stock_status: "in_stock",
+  });
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -46,6 +66,17 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/products")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load products");
+        return response.json() as Promise<Product[]>;
+      })
+      .then(setProducts)
+      .catch(() => setProductError("Products could not be loaded. Run the catalog SQL in Supabase first."))
+      .finally(() => setIsLoadingProducts(false));
   }, []);
 
   useEffect(() => {
@@ -103,6 +134,48 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     router.refresh();
   };
 
+  const saveProduct = async (product: Product) => {
+    setSavingProductId(product.id);
+    setProductError("");
+    const response = await fetch("/api/admin/products", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(product),
+    });
+    if (!response.ok) setProductError("That product could not be saved.");
+    else setProducts((current) => current.map((item) => item.id === product.id ? product : item));
+    setSavingProductId(null);
+  };
+
+  const addProduct = async () => {
+    if (!newProduct.id.trim()) {
+      setProductError("Give the new product a unique ID before saving.");
+      return;
+    }
+    setSavingProductId("new");
+    setProductError("");
+    const response = await fetch("/api/admin/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...newProduct, id: newProduct.id.trim() }),
+    });
+    if (!response.ok) {
+      setProductError("That product could not be added. Check that its ID is unique.");
+    } else {
+      const created = (await response.json()) as Product[];
+      setProducts((current) => [...current, created[0] || { ...newProduct, id: newProduct.id.trim() }]);
+      setNewProduct({ id: "", name: "", description: "", category: "", section: "foodstuff", unit: "", price: 0, image: "", stock_status: "in_stock" });
+    }
+    setSavingProductId(null);
+  };
+
+  const deleteProduct = async (id: string) => {
+    if (!window.confirm("Remove this product from the catalog?")) return;
+    const response = await fetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (!response.ok) setProductError("That product could not be removed.");
+    else setProducts((current) => current.filter((product) => product.id !== id));
+  };
+
   return (
     <main className="min-h-screen bg-green-50 text-gray-900">
       <header className="border-b border-green-100 bg-white">
@@ -134,8 +207,8 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {[
             [String(meals.length), "Menu items"],
+            [String(products.length), "Grocery products"],
             ["1", "Owner account"],
-            ["0", "Vendor logins"],
           ].map(([value, label]) => (
             <div key={label} className="rounded-2xl bg-white p-5 shadow-sm">
               <p className="text-3xl font-bold text-green-700">{value}</p>
@@ -148,6 +221,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
             {[
               ["menu", "Meals & prices"],
               ["availability", "Availability"],
+              ["products", "Foodstuff & Fresh Food"],
               ["orders", "Orders"],
             ].map(([value, label]) => (
               <button
@@ -192,6 +266,50 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+          {activeSection === "products" && (
+            <div className="pt-5">
+              <h2 className="text-xl font-bold text-green-900">Foodstuff & Fresh Food</h2>
+              <p className="mt-1 text-sm text-gray-600">Add or update products, pricing, stock, and the image shown to customers. For images, paste a public image URL or an emoji.</p>
+              {productError && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{productError}</p>}
+              <div className="mt-4 rounded-xl border border-green-100 bg-green-50/50 p-4">
+                <h3 className="font-semibold text-green-900">Add a product</h3>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {(["id", "name", "category", "unit", "image"] as const).map((field) => (
+                    <input key={field} placeholder={field === "id" ? "Unique ID (e.g. fresh-mango)" : field[0].toUpperCase() + field.slice(1)} className="rounded-lg border border-green-200 px-3 py-2" value={newProduct[field]} onChange={(event) => setNewProduct({ ...newProduct, [field]: event.target.value })} />
+                  ))}
+                  <input placeholder="Price (₦)" type="number" min="0" className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.price} onChange={(event) => setNewProduct({ ...newProduct, price: Number(event.target.value) })} />
+                  <select className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.section} onChange={(event) => setNewProduct({ ...newProduct, section: event.target.value as Product["section"] })}><option value="foodstuff">Foodstuff</option><option value="fresh-food">Fresh Food</option></select>
+                  <select className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.stock_status} onChange={(event) => setNewProduct({ ...newProduct, stock_status: event.target.value as Product["stock_status"] })}><option value="in_stock">In stock</option><option value="limited">Limited</option><option value="unavailable">Unavailable</option></select>
+                  <textarea placeholder="Description" className="rounded-lg border border-green-200 px-3 py-2 sm:col-span-2" value={newProduct.description} onChange={(event) => setNewProduct({ ...newProduct, description: event.target.value })} />
+                </div>
+                <button type="button" onClick={addProduct} disabled={savingProductId === "new"} className="mt-3 rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{savingProductId === "new" ? "Adding..." : "Add product"}</button>
+              </div>
+              {isLoadingProducts ? <p className="mt-4 text-sm text-gray-500">Loading products...</p> : (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {products.map((product) => (
+                    <div key={product.id} className="rounded-xl border border-green-100 p-4">
+                      <div className="grid gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{product.id}</p>
+                        <input className="rounded-lg border border-green-200 px-3 py-2 font-medium" value={product.name} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, name: event.target.value } : item))} />
+                        <textarea className="rounded-lg border border-green-200 px-3 py-2 text-sm" value={product.description} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, description: event.target.value } : item))} />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input className="rounded-lg border border-green-200 px-3 py-2" value={product.category} placeholder="Category" onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, category: event.target.value } : item))} />
+                          <input className="rounded-lg border border-green-200 px-3 py-2" value={product.unit} placeholder="Unit / pack size" onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, unit: event.target.value } : item))} />
+                          <input type="number" min="0" className="rounded-lg border border-green-200 px-3 py-2" value={product.price} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, price: Number(event.target.value) } : item))} />
+                          <select className="rounded-lg border border-green-200 px-3 py-2" value={product.stock_status} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, stock_status: event.target.value as Product["stock_status"] } : item))}><option value="in_stock">In stock</option><option value="limited">Limited</option><option value="unavailable">Unavailable</option></select>
+                        </div>
+                        <input className="rounded-lg border border-green-200 px-3 py-2" value={product.image} placeholder="Public image URL or emoji" onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, image: event.target.value } : item))} />
+                        <div className="flex gap-2">
+                          <button type="button" onClick={() => saveProduct(product)} disabled={savingProductId === product.id} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{savingProductId === product.id ? "Saving..." : "Save changes"}</button>
+                          <button type="button" onClick={() => deleteProduct(product.id)} className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700">Remove</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {activeSection === "availability" && (
