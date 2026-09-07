@@ -315,6 +315,13 @@ export default function CookedFoodPage() {
   }, []);
 
   useEffect(() => {
+    if (window.location.hash === "#cart") {
+      const timeoutId = window.setTimeout(() => setIsCartOpen(true), 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+  }, []);
+
+  useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setCart(getStoredCart());
       setIsCartLoaded(true);
@@ -329,6 +336,7 @@ export default function CookedFoodPage() {
     }
 
     window.localStorage.setItem(cartStorageKey, JSON.stringify(cart));
+    window.dispatchEvent(new Event("chophub-cart-updated"));
   }, [cart, isCartLoaded]);
 
   const scrollToMenu = () => {
@@ -517,7 +525,7 @@ export default function CookedFoodPage() {
   const qualifiesForFreeDayDelivery = !isNightDelivery && totalPrice >= 50000;
 
   // WhatsApp Checkout with customer details
-  const sendOrderToWhatsApp = () => {
+  const sendOrderToWhatsApp = async () => {
     if (cart.length === 0) return;
 
     if (!customerName || !customerPhone || !deliveryAddress || !deliveryArea) {
@@ -548,6 +556,24 @@ export default function CookedFoodPage() {
           : "Daytime delivery fee to be confirmed based on location"
     }%0A%0A`;
     message += `Please confirm my order. Thank you!`;
+
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerName,
+        customerPhone,
+        deliveryAddress,
+        deliveryArea,
+        subtotal: totalPrice,
+        items: cart,
+      }),
+    });
+
+    if (!response.ok) {
+      alert("We could not save your order. Please try again.");
+      return;
+    }
 
     const phoneNumber = "2348081688937";
     const whatsappURL = `https://wa.me/${phoneNumber}?text=${message}`;

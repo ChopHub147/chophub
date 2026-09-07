@@ -46,6 +46,7 @@ export default function FreshFoodPage() {
       ? cart.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
       : [...cart, { id: product.id, name: `${product.name} (${product.unit})`, price: product.price, quantity: 1, image: product.icon }];
     window.localStorage.setItem(cartStorageKey, JSON.stringify(nextCart));
+    window.dispatchEvent(new Event("chophub-cart-updated"));
     setCartCount(nextCart.reduce((total, item) => total + item.quantity, 0));
   };
 
