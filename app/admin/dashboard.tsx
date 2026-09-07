@@ -19,9 +19,20 @@ type Order = {
   customer_phone: string;
   delivery_area: string;
   subtotal: number;
-  status: string;
+  status: OrderStatus;
   created_at: string;
 };
+
+const orderStatuses = [
+  ["new", "New"],
+  ["confirmed", "Confirmed"],
+  ["preparing", "Preparing"],
+  ["out_for_delivery", "Out for delivery"],
+  ["delivered", "Delivered"],
+  ["cancelled", "Cancelled"],
+] as const;
+
+type OrderStatus = (typeof orderStatuses)[number][0];
 
 type Product = {
   id: string;
@@ -174,6 +185,16 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     const response = await fetch(`/api/admin/products?id=${encodeURIComponent(id)}`, { method: "DELETE" });
     if (!response.ok) setProductError("That product could not be removed.");
     else setProducts((current) => current.filter((product) => product.id !== id));
+  };
+
+  const updateOrderStatus = async (order: Order, status: OrderStatus) => {
+    const response = await fetch("/api/orders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: order.id, status }),
+    });
+    if (!response.ok) return;
+    setOrders((current) => current.map((item) => item.id === order.id ? { ...item, status } : item));
   };
 
   return (
@@ -369,7 +390,13 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                   <div key={order.id} className="rounded-xl border border-green-100 p-4">
                     <div className="flex flex-wrap justify-between gap-2">
                       <p className="font-semibold text-green-900">Order #{order.id}</p>
-                      <span className="text-sm text-gray-500">{order.status}</span>
+                      <select
+                        value={order.status}
+                        onChange={(event) => updateOrderStatus(order, event.target.value as OrderStatus)}
+                        className="rounded-lg border border-green-200 px-2 py-1 text-sm font-semibold text-green-800"
+                      >
+                        {orderStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
                     </div>
                     <p className="mt-1 text-sm text-gray-600">{order.customer_name} · {order.customer_phone} · {order.delivery_area}</p>
                     <p className="mt-1 font-semibold text-green-700">₦{Number(order.subtotal).toLocaleString()}</p>

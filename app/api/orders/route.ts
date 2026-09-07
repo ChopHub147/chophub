@@ -12,6 +12,10 @@ type OrderRequest = {
   items?: unknown;
 };
 
+const orderStatuses = ["new", "confirmed", "preparing", "out_for_delivery", "delivered", "cancelled"] as const;
+
+type OrderStatus = (typeof orderStatuses)[number];
+
 export async function POST(request: Request) {
   const body = (await request.json()) as OrderRequest;
   const requiredText = [body.customerName, body.customerPhone, body.deliveryAddress, body.deliveryArea];
@@ -61,5 +65,28 @@ export async function GET() {
   }
 
   const orders = await supabaseAdminRequest("orders?select=*&order=created_at.desc");
+  return NextResponse.json(orders);
+}
+
+export async function PATCH(request: Request) {
+  const session = (await cookies()).get(adminCookieName)?.value;
+  if (!isValidAdminSession(session)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = (await request.json()) as { id?: unknown; status?: unknown };
+  const id = typeof body.id === "number" ? body.id : null;
+  const status = typeof body.status === "string" ? body.status as OrderStatus : null;
+
+  if (id === null || !status || !orderStatuses.includes(status)) {
+    return NextResponse.json({ error: "A valid order id and status are required" }, { status: 400 });
+  }
+
+  const orders = await supabaseAdminRequest(`orders?id=eq.${id}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify({ status }),
+  });
+
   return NextResponse.json(orders);
 }
