@@ -37,7 +37,15 @@ function productFields(body: ProductPayload) {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(await supabaseAdminRequest("products?select=*&order=section.asc,id.asc"));
+  try {
+    return NextResponse.json(await supabaseAdminRequest("products?select=*&order=section.asc,id.asc"));
+  } catch (error) {
+    console.error("Could not load admin products", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Supabase products request failed" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {

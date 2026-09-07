@@ -59,6 +59,7 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [productError, setProductError] = useState("");
   const [savingProductId, setSavingProductId] = useState<string | null>(null);
+  const [uploadingImageId, setUploadingImageId] = useState<string | null>(null);
   const [newProduct, setNewProduct] = useState<Product>({
     id: "", name: "", description: "", category: "", section: "foodstuff", unit: "",
     price: 0, image: "", stock_status: "in_stock",
@@ -82,11 +83,17 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
   useEffect(() => {
     fetch("/api/admin/products")
       .then(async (response) => {
-        if (!response.ok) throw new Error("Could not load products");
+        if (!response.ok) {
+          const result = (await response.json().catch(() => ({}))) as { error?: string };
+          throw new Error(result.error || "Could not load products");
+        }
         return response.json() as Promise<Product[]>;
       })
       .then(setProducts)
-      .catch(() => setProductError("Products could not be loaded. Run the catalog SQL in Supabase first."))
+      .catch((error: unknown) => {
+        const reason = error instanceof Error ? error.message : "";
+        setProductError(`Products could not be loaded. ${reason} Run the catalog SQL in Supabase first.`);
+      })
       .finally(() => setIsLoadingProducts(false));
   }, []);
 
@@ -156,6 +163,28 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     if (!response.ok) setProductError("That product could not be saved.");
     else setProducts((current) => current.map((item) => item.id === product.id ? product : item));
     setSavingProductId(null);
+  };
+
+  const uploadProductImage = async (productId: string, file: File) => {
+    if (!productId.trim()) {
+      setProductError("Give the product a unique ID before uploading an image.");
+      return;
+    }
+    setUploadingImageId(productId);
+    setProductError("");
+    const formData = new FormData();
+    formData.append("productId", productId.trim());
+    formData.append("file", file);
+    const response = await fetch("/api/admin/product-image", { method: "POST", body: formData });
+    if (!response.ok) {
+      const result = (await response.json().catch(() => ({}))) as { error?: string };
+      setProductError(result.error || "That image could not be uploaded.");
+    } else {
+      const result = (await response.json()) as { url: string };
+      setProducts((current) => current.map((item) => item.id === productId ? { ...item, image: result.url } : item));
+      setNewProduct((current) => current.id === productId ? { ...current, image: result.url } : current);
+    }
+    setUploadingImageId(null);
   };
 
   const addProduct = async () => {
@@ -300,6 +329,13 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                   {(["id", "name", "category", "unit", "image"] as const).map((field) => (
                     <input key={field} placeholder={field === "id" ? "Unique ID (e.g. fresh-mango)" : field[0].toUpperCase() + field.slice(1)} className="rounded-lg border border-green-200 px-3 py-2" value={newProduct[field]} onChange={(event) => setNewProduct({ ...newProduct, [field]: event.target.value })} />
                   ))}
+                  <label className="rounded-lg border border-dashed border-green-300 px-3 py-2 text-sm text-gray-600">
+                    {uploadingImageId === newProduct.id ? "Uploading image..." : "Upload product image"}
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="mt-1 block w-full text-xs" disabled={uploadingImageId === newProduct.id} onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void uploadProductImage(newProduct.id, file);
+                    }} />
+                  </label>
                   <input placeholder="Price (₦)" type="number" min="0" className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.price} onChange={(event) => setNewProduct({ ...newProduct, price: Number(event.target.value) })} />
                   <select className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.section} onChange={(event) => setNewProduct({ ...newProduct, section: event.target.value as Product["section"] })}><option value="foodstuff">Foodstuff</option><option value="fresh-food">Fresh Food</option></select>
                   <select className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.stock_status} onChange={(event) => setNewProduct({ ...newProduct, stock_status: event.target.value as Product["stock_status"] })}><option value="in_stock">In stock</option><option value="limited">Limited</option><option value="unavailable">Unavailable</option></select>
@@ -322,6 +358,13 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
                           <select className="rounded-lg border border-green-200 px-3 py-2" value={product.stock_status} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, stock_status: event.target.value as Product["stock_status"] } : item))}><option value="in_stock">In stock</option><option value="limited">Limited</option><option value="unavailable">Unavailable</option></select>
                         </div>
                         <input className="rounded-lg border border-green-200 px-3 py-2" value={product.image} placeholder="Public image URL or emoji" onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, image: event.target.value } : item))} />
+                        <label className="rounded-lg border border-dashed border-green-300 px-3 py-2 text-sm text-gray-600">
+                          {uploadingImageId === product.id ? "Uploading image..." : "Upload replacement image"}
+                          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="mt-1 block w-full text-xs" disabled={uploadingImageId === product.id} onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadProductImage(product.id, file);
+                          }} />
+                        </label>
                         <div className="flex gap-2">
                           <button type="button" onClick={() => saveProduct(product)} disabled={savingProductId === product.id} className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{savingProductId === product.id ? "Saving..." : "Save changes"}</button>
                           <button type="button" onClick={() => deleteProduct(product.id)} className="rounded-full border border-red-200 px-4 py-2 text-sm font-semibold text-red-700">Remove</button>
