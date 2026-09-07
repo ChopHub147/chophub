@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Product = {
   id: string;
@@ -41,13 +41,37 @@ const products: Product[] = [
 ];
 
 export default function FoodstuffPage() {
+  const [catalogProducts, setCatalogProducts] = useState(products);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartCount, setCartCount] = useState(0);
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
   const filteredProducts = useMemo(
-    () => selectedCategory === "All" ? products : products.filter((product) => product.category === selectedCategory),
-    [selectedCategory]
+    () => selectedCategory === "All" ? catalogProducts : catalogProducts.filter((product) => product.category === selectedCategory),
+    [catalogProducts, selectedCategory]
   );
+
+  useEffect(() => {
+    fetch("/api/products?section=foodstuff")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load Foodstuff products");
+        return response.json();
+      })
+      .then((databaseProducts: Array<Record<string, unknown>>) => {
+        if (databaseProducts.length > 0) {
+          setCatalogProducts(databaseProducts.map((product) => ({
+            id: String(product.id),
+            name: String(product.name),
+            category: String(product.category),
+            pack: String(product.unit),
+            price: Number(product.price),
+            description: String(product.description),
+            icon: String(product.image || "🛒"),
+            available: product.stock_status !== "unavailable",
+          })));
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   const addToCart = (product: Product) => {
     const stored = window.localStorage.getItem(cartStorageKey);

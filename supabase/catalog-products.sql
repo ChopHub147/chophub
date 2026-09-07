@@ -14,9 +14,47 @@ create table if not exists public.products (
 
 alter table public.products enable row level security;
 
-create policy "Public can read available catalog products"
+drop policy if exists "Public can read available catalog products" on public.products;
+
+create policy "Public can read catalog products"
 on public.products for select
-using (stock_status <> 'unavailable');
+using (true);
+
+insert into public.products (id, name, description, category, section, unit, price, image, stock_status)
+values
+  ('foodstuff-garri-1kg', 'Garri', 'Crispy cassava flakes for drinks and meals.', 'Grains & Staples', 'foodstuff', '1 kg', 1800, '🌾', 'in_stock'),
+  ('foodstuff-rice-5kg', 'Long-grain rice', 'Everyday rice for family meals.', 'Grains & Staples', 'foodstuff', '5 kg bag', 12500, '🍚', 'in_stock'),
+  ('foodstuff-beans-1kg', 'Black-eyed beans', 'Clean, sorted beans for soups and staples.', 'Grains & Staples', 'foodstuff', '1 kg', 2800, '🫘', 'in_stock'),
+  ('foodstuff-wheat-1kg', 'Wheat flour', 'For baking, pastries, and home cooking.', 'Flours & Baking', 'foodstuff', '1 kg', 2200, '🥣', 'in_stock'),
+  ('foodstuff-sugar-1kg', 'White sugar', 'Fine sugar for drinks and baking.', 'Flours & Baking', 'foodstuff', '1 kg', 2200, '🍬', 'in_stock'),
+  ('foodstuff-palm-oil-1l', 'Palm oil', 'Rich red palm oil for traditional cooking.', 'Cooking Oils', 'foodstuff', '1 litre', 3500, '🫗', 'in_stock'),
+  ('foodstuff-tomato-400g', 'Tomato paste', 'Convenient tomato base for sauces and stews.', 'Canned & Packaged', 'foodstuff', '400 g tin', 1800, '🥫', 'in_stock'),
+  ('foodstuff-sardine-155g', 'Sardines', 'Shelf-stable fish for quick meals.', 'Canned & Packaged', 'foodstuff', '155 g tin', 2500, '🐟', 'in_stock'),
+  ('foodstuff-stock-cubes', 'Stock cubes', 'Seasoning cubes for soups, rice, and stews.', 'Seasonings', 'foodstuff', '1 pack', 1200, '🧂', 'in_stock'),
+  ('foodstuff-bottled-water', 'Bottled water', 'Chilled bottled water for your home or office.', 'Beverages', 'foodstuff', '75 cl bottle', 500, '💧', 'in_stock'),
+  ('foodstuff-biscuits', 'Assorted biscuits', 'A convenient snack for the household.', 'Snacks', 'foodstuff', '1 pack', 1500, '🍪', 'in_stock'),
+  ('foodstuff-detergent', 'Laundry detergent', 'Household cleaning essential.', 'Household', 'foodstuff', '1 kg pack', 3500, '🧼', 'unavailable'),
+  ('fresh-bananas', 'Bananas', 'Ripe, sweet bananas for home or office.', 'Fruits', 'fresh-food', '1 bunch', 2500, '🍌', 'in_stock'),
+  ('fresh-oranges', 'Oranges', 'Juicy seasonal oranges.', 'Fruits', 'fresh-food', '1 dozen', 3500, '🍊', 'in_stock'),
+  ('fresh-pawpaw', 'Pawpaw', 'Fresh ripe pawpaw selected for you.', 'Fruits', 'fresh-food', '1 piece', 2500, '🥭', 'limited'),
+  ('fresh-tomatoes', 'Tomatoes', 'Fresh tomatoes for sauces, stews, and salads.', 'Vegetables & Greens', 'fresh-food', '1 kg', 3500, '🍅', 'in_stock'),
+  ('fresh-onions', 'Onions', 'Crisp onions for everyday cooking.', 'Vegetables & Greens', 'fresh-food', '1 kg', 2800, '🧅', 'in_stock'),
+  ('fresh-ugu', 'Ugu leaves', 'Fresh fluted pumpkin leaves for soups.', 'Vegetables & Greens', 'fresh-food', '1 bunch', 1200, '🌿', 'in_stock'),
+  ('fresh-plantain', 'Plantain', 'Green or ripe plantain for frying and cooking.', 'Vegetables & Greens', 'fresh-food', '1 kg', 3000, '🍌', 'in_stock'),
+  ('fresh-chicken', 'Chicken', 'Cleaned chicken prepared for cooking.', 'Meat & Poultry', 'fresh-food', '1 kg', 6500, '🍗', 'limited'),
+  ('fresh-beef', 'Beef', 'Fresh beef cuts for soups and stews.', 'Meat & Poultry', 'fresh-food', '1 kg', 8500, '🥩', 'in_stock'),
+  ('fresh-catfish', 'Catfish', 'Fresh catfish cleaned to order.', 'Fish & Seafood', 'fresh-food', '1 kg', 7500, '🐟', 'in_stock'),
+  ('fresh-mackerel', 'Mackerel', 'Fresh or frozen mackerel for family meals.', 'Fish & Seafood', 'fresh-food', '1 kg', 6500, '🐠', 'limited'),
+  ('fresh-eggs', 'Chicken eggs', 'Fresh eggs for breakfast and baking.', 'Eggs & Dairy', 'fresh-food', '1 crate', 5500, '🥚', 'in_stock')
+on conflict (id) do update set
+  name = excluded.name,
+  description = excluded.description,
+  category = excluded.category,
+  section = excluded.section,
+  unit = excluded.unit,
+  price = excluded.price,
+  image = excluded.image,
+  stock_status = excluded.stock_status;
 
 alter table public.orders
   add column if not exists customer_name text,
