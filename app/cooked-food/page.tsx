@@ -587,16 +587,10 @@ export default function CookedFoodPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-green-100">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img
-              src="/Chop_icon.png"
-              alt="ChopHub"
-              className="w-10 h-10 rounded-full object-cover"
-            />
-            <span className="text-xl font-extrabold tracking-tight text-green-800">
-              ChopHub
-            </span>
-          </div>
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/Chop_icon.png" alt="ChopHub" className="h-10 w-10 rounded-full object-cover" />
+            <span className="text-xl font-extrabold tracking-tight text-green-800">ChopHub</span>
+          </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a href="/menu" className="hover:text-green-700 transition">
