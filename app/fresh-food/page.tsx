@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type FreshProduct = {
   id: string;
@@ -34,10 +34,34 @@ const products: FreshProduct[] = [
 ];
 
 export default function FreshFoodPage() {
+  const [catalogProducts, setCatalogProducts] = useState(products);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [cartCount, setCartCount] = useState(0);
   const [addedProductId, setAddedProductId] = useState<string | null>(null);
-  const filteredProducts = useMemo(() => selectedCategory === "All" ? products : products.filter((product) => product.category === selectedCategory), [selectedCategory]);
+  const filteredProducts = useMemo(() => selectedCategory === "All" ? catalogProducts : catalogProducts.filter((product) => product.category === selectedCategory), [catalogProducts, selectedCategory]);
+
+  useEffect(() => {
+    fetch("/api/products?section=fresh-food")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load Fresh Food products");
+        return response.json();
+      })
+      .then((databaseProducts: Array<Record<string, unknown>>) => {
+        if (databaseProducts.length > 0) {
+          setCatalogProducts(databaseProducts.map((product) => ({
+            id: String(product.id),
+            name: String(product.name),
+            category: String(product.category),
+            unit: String(product.unit),
+            price: Number(product.price),
+            description: String(product.description),
+            icon: String(product.image || "🥬"),
+            stock: product.stock_status === "limited" ? "Limited" : product.stock_status === "unavailable" ? "Unavailable" : "In stock",
+          })));
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   const addToCart = (product: FreshProduct) => {
     const stored = window.localStorage.getItem(cartStorageKey);

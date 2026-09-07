@@ -638,12 +638,6 @@ export default function CookedFoodPage() {
               )}
             </button>
 
-            <button
-              onClick={scrollToMenu}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition"
-            >
-              Order Now
-            </button>
           </div>
           <div className="relative md:hidden">
             <button
