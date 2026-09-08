@@ -144,7 +144,23 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
     await fetch("/api/admin/logout", { method: "POST" });
     router.refresh();
   };
+const uploadImage = async (file: File): Promise<string | null> => {
+  const formData = new FormData();
+  formData.append("file", file);
 
+  const response = await fetch("/api/admin/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    setProductError("Image upload failed. Please try again.");
+    return null;
+  }
+
+  const data = await response.json();
+  return data.url as string;
+};
   const saveProduct = async (product: Product) => {
     setSavingProductId(product.id);
     setProductError("");
@@ -297,9 +313,45 @@ export default function AdminDashboard({ adminEmail }: { adminEmail: string }) {
               <div className="mt-4 rounded-xl border border-green-100 bg-green-50/50 p-4">
                 <h3 className="font-semibold text-green-900">Add a product</h3>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {(["id", "name", "category", "unit", "image"] as const).map((field) => (
+                  {(["id", "name", "category", "unit"] as const).map((field) => (
                     <input key={field} placeholder={field === "id" ? "Unique ID (e.g. fresh-mango)" : field[0].toUpperCase() + field.slice(1)} className="rounded-lg border border-green-200 px-3 py-2" value={newProduct[field]} onChange={(event) => setNewProduct({ ...newProduct, [field]: event.target.value })} />
-                  ))}
+                  ))}<div className="sm:col-span-2">
+  <label className="text-xs font-semibold text-gray-600">Product Image</label>
+  <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+    <input
+      type="text"
+      placeholder="Image URL or emoji"
+      className="flex-1 rounded-lg border border-green-200 px-3 py-2"
+      value={newProduct.image}
+      onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+    />
+    <label className="cursor-pointer rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-200">
+      Upload Image
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const url = await uploadImage(file);
+          if (url) {
+            setNewProduct((prev) => ({ ...prev, image: url }));
+          }
+        }}
+      />
+    </label>
+  </div>
+  {newProduct.image && (
+    <div className="mt-2">
+      {newProduct.image.startsWith("http") ? (
+        <img src={newProduct.image} alt="Preview" className="h-20 w-20 rounded-lg object-cover" />
+      ) : (
+        <span className="text-3xl">{newProduct.image}</span>
+      )}
+    </div>
+  )}
+</div>
                   <input placeholder="Price (₦)" type="number" min="0" className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.price} onChange={(event) => setNewProduct({ ...newProduct, price: Number(event.target.value) })} />
                   <select className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.section} onChange={(event) => setNewProduct({ ...newProduct, section: event.target.value as Product["section"] })}><option value="foodstuff">Foodstuff</option><option value="fresh-food">Fresh Food</option></select>
                   <select className="rounded-lg border border-green-200 px-3 py-2" value={newProduct.stock_status} onChange={(event) => setNewProduct({ ...newProduct, stock_status: event.target.value as Product["stock_status"] })}><option value="in_stock">In stock</option><option value="limited">Limited</option><option value="unavailable">Unavailable</option></select>
