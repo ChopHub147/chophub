@@ -318,13 +318,56 @@ const uploadImage = async (file: File): Promise<string | null> => {
                   ))}<div className="sm:col-span-2">
   <label className="text-xs font-semibold text-gray-600">Product Image</label>
   <div className="mt-1 flex flex-col gap-2 sm:flex-row">
+    <div>
+  <div className="flex flex-col gap-2 sm:flex-row">
     <input
-      type="text"
-      placeholder="Image URL or emoji"
       className="flex-1 rounded-lg border border-green-200 px-3 py-2"
-      value={newProduct.image}
-      onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
+      value={product.image}
+      placeholder="Public image URL or emoji"
+      onChange={(event) =>
+        setProducts((current) =>
+          current.map((item) =>
+            item.id === product.id ? { ...item, image: event.target.value } : item
+          )
+        )
+      }
     />
+    <label className="cursor-pointer rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-200">
+      Upload
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const url = await uploadImage(file);
+          if (url) {
+            setProducts((current) =>
+              current.map((item) =>
+                item.id === product.id ? { ...item, image: url } : item
+              )
+            );
+          }
+        }}
+      />
+    </label>
+  </div>
+
+  {product.image && (
+    <div className="mt-2">
+      {product.image.startsWith("http") ? (
+        <img
+          src={product.image}
+          alt="Preview"
+          className="h-16 w-16 rounded-lg object-cover"
+        />
+      ) : (
+        <span className="text-2xl">{product.image}</span>
+      )}
+    </div>
+  )}
+</div>
     <label className="cursor-pointer rounded-lg bg-green-100 px-4 py-2 text-sm font-semibold text-green-800 hover:bg-green-200">
       Upload Image
       <input
